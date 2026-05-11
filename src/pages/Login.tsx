@@ -41,11 +41,20 @@ const LoginPage = () => {
             name="email"
             rules={[{ required: true, message: 'البريد الإلكتروني مطلوب' }, { type: 'email', message: 'البريد الإلكتروني غير صالح' }]}
           >
-            <Input.Prefix>
-              <UserOutlined style={{ color: 'rgba(0,0,0,.25)' }} />
-            </Input.Prefix>
             <Input
               placeholder="البريد الإلكتروني"
+              prefix={<UserOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
+              style={{ borderRadius: 8 }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="password"
+            rules={[{ required: true, message: 'كلمة المرور مطلوبة' }]}
+          >
+            <Input.Password
+              placeholder="كلمة المرور"
+              prefix={<LockOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
               style={{ borderRadius: 8 }}
             />
           </Form.Item>
