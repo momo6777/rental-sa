@@ -50,15 +50,23 @@
 | `scripts/test-rls.js` | 27 |
 | `scripts/test-financial.js` | 28 |
 
-## Current Task
-🏁 All tasks complete. Project ready for deployment.
+## ✅ Deployed 🚀
 
-## Next Steps for Deployment
-1. Run `npx supabase db push` in the project directory to apply all migrations (004, 005)
-2. Deploy the Resend Edge Function: `npx supabase functions deploy send-email`
-3. Set environment variables in Vercel dashboard
-4. Configure custom domain + SSL in Vercel
-5. Create initial admin user via Supabase Auth dashboard
+**Production URL:** https://excel-xi-three.vercel.app  
+**GitHub Repo:** https://github.com/momo6777/rental-sa  
+**Vercel Dashboard:** https://vercel.com/momo6777s-projects/excel
+
+## Post-Deployment Checklist
+1. Run `npx supabase db push` to apply migrations (004, 005)
+2. Set env vars in Vercel dashboard → Settings → Environment Variables:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_APP_NAME` = `نظام إدارة العقارات`
+   - `VITE_VAT_RATE` = `0.15`
+3. Deploy email function: `npx supabase functions deploy send-email`
+4. Set `RESEND_API_KEY` in Supabase Edge Function secrets
+5. Create admin user in Supabase Auth dashboard → Users → Add User
+6. Configure custom domain in Vercel dashboard → Domains
 ⚪ Task 16: تكامل منصة إيجار
 ⚪ Task 17: الفاتورة الإلكترونية (ZATCA)
 ⚪ Task 18: إعداد SADAD
