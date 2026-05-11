@@ -1,0 +1,180 @@
+/* Contracts page styling – based on Tenants page */
+.contractsPage {
+  background-color: #0f0f0f;
+  min-height: 100vh;
+  color: #fff;
+  padding: 20px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.pageHeader h1 {
+  color: #ffd700;
+  font-size: 24px;
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.emptyState p {
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+/* Ant Design overrides */
+.ant-table {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #333;
+}
+
+.ant-table-thead > tr > th {
+  background-color: #242424 !important;
+  border-bottom: 1px solid #333 !important;
+  color: #ffd700 !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  padding: 16px 24px !important;
+  font-size: 14px !important;
+}
+
+.ant-table-tbody > tr > td {
+  padding: 16px 24px !important;
+  border-bottom: 1px solid #242424 !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: #242424 !important;
+}
+
+.ant-table-tbody > tr > td:last-child {
+  text-align: center !important;
+}
+
+.ant-select-selector {
+  border-radius: 8px !important;
+  border: 1px solid #333 !important;
+  background-color: #242424 !important;
+  color: #fff !important;
+}
+
+.ant-select-selector:hover,
+.ant-select-selector:focus {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2) !important;
+}
+
+.ant-select-item-option-active,
+.ant-select-item-option-selected {
+  background-color: rgba(255, 215, 0, 0.15) !important;
+}
+
+.ant-select-item-option-active .ant-select-item-option-content,
+.ant-select-item-option-selected .ant-select-item-option-content {
+  color: #ffd700 !important;
+}
+
+.ant-btn {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.ant-btn-primary {
+  background: linear-gradient(45deg, #ffd700, #ffc107) !important;
+  border: none !important;
+  color: #000 !important;
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(45deg, #ffc107, #ffd700) !important;
+  transform: translateY(-2px) !important;
+}
+
+.ant-input-search .ant-input {
+  border-radius: 8px !important;
+  border: 1px solid #333 !important;
+  background-color: #242424 !important;
+  color: #fff !important;
+}
+
+.ant-input-search .ant-input:hover,
+.ant-input-search .ant-input:focus {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2) !important;
+}
+
+.ant-popover-inner-content {
+  padding: 8px !important;
+}
+
+.ant-popover-arrow-content {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .headerActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .ant-table {
+    font-size: 12px;
+  }
+  
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    padding: 12px 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageHeader h1 {
+    font-size: 20px;
+  }
+  
+  .headerActions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .ant-table {
+    overflow-x: auto;
+    display: block;
+    width: 100%;
+  }
+}

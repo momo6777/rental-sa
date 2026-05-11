@@ -1,0 +1,158 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #0f0f0f;
+  color: #fff;
+}
+
+.sider {
+  background-color: #1a1a1a !important;
+  border-right: 1px solid #333;
+  transition: all 0.3s ease;
+}
+
+.sider .logo {
+  height: 64px;
+  background: linear-gradient(45deg, #1a1a1a, #242424);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffd700;
+  border-bottom: 1px solid #333;
+}
+
+.sider .logo h2 {
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.ant-menu-item {
+  color: rgba(255, 255, 255, 0.7) !important;
+  transition: all 0.2s ease;
+}
+
+.ant-menu-item:hover {
+  color: #fff !important;
+  background-color: rgba(255, 215, 0, 0.1) !important;
+}
+
+.ant-menu-item-selected {
+  color: #ffd700 !important;
+  font-weight: 500;
+  background-color: rgba(255, 215, 0, 0.15) !important;
+}
+
+.ant-menu-item-selected .anticon {
+  color: #ffd700 !important;
+}
+
+.header {
+  background: linear-gradient(90deg, #1a1a1a, #242424);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid #333;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.userInfo {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+}
+
+.roleBadge {
+  background-color: rgba(255, 215, 0, 0.15);
+  color: #ffd700;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.logoutBtn {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.logoutBtn:hover {
+  color: #ff4d4f !important;
+}
+
+.content {
+  margin: 24px;
+  flex: 1;
+}
+
+.container {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  border: 1px solid #333;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sider {
+    display: none;
+  }
+  
+  .layout {
+    flex-direction: column;
+  }
+  
+  .content {
+    margin: 0;
+  }
+  
+  .container {
+    margin: 16px;
+    border-radius: 0;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.layout, .sider, .header, .container {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ffd700;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ffc107;
+}

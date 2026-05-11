@@ -1,0 +1,66 @@
+.bell {
+  cursor: pointer;
+}
+
+.popover {
+  width: 350px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #333;
+}
+
+.notifItem {
+  padding: 10px 12px !important;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #2a2a2a !important;
+}
+
+.notifItem:hover {
+  background-color: #2a2a2a;
+}
+
+.unread {
+  background-color: rgba(255, 215, 0, 0.05);
+}
+
+.notifTitle {
+  color: #fff !important;
+  font-size: 13px;
+}
+
+.notifMessage {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 12px;
+}
+
+.notifTime {
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: 11px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ffd700;
+  display: inline-block;
+}
+
+.popoverOverlay :global(.ant-popover-inner) {
+  background-color: #1a1a1a !important;
+  border: 1px solid #333 !important;
+}
+
+.popoverOverlay :global(.ant-popover-arrow-content) {
+  background-color: #1a1a1a !important;
+}

@@ -1,0 +1,80 @@
+.reportsPage {
+  background-color: #0f0f0f;
+  min-height: 100vh;
+  color: #fff;
+  padding: 20px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.pageHeader h1 {
+  color: #ffd700;
+  font-size: 24px;
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  margin: 0;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.gridRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 992px) {
+  .gridRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .gridRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.statCard {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #333;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.statCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  border-color: #ffd700;
+}
+
+.tableCard {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  border: 1px solid #333;
+  margin-top: 24px;
+}
+
+.tableCard :global(.ant-card-head-title) {
+  color: #ffd700;
+  font-size: 18px;
+}

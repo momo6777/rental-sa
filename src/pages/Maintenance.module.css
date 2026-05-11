@@ -1,0 +1,28 @@
+.maintenancePage {
+  background-color: #0f0f0f;
+  min-height: 100vh;
+  color: #fff;
+  padding: 20px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.pageHeader h1 {
+  color: #ffd700;
+  font-size: 24px;
+  margin: 0;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}

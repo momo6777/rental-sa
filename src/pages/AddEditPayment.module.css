@@ -1,0 +1,8 @@
+/* AddEditPayment.module.css */
+
+/* Reuse same modal styling as AddEditContract for consistency */
+.modalContent {
+  padding: 24px;
+}
+
+/* Additional custom styles can be added here if needed */

@@ -1,0 +1,95 @@
+.AddEditUnit {
+  background-color: #0f0f0f;
+  color: #fff;
+}
+
+.AddEditUnit .ant-modal-content {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.AddEditUnit .ant-modal-header {
+  background: linear-gradient(90deg, #1a1a1a, #242424);
+  border-bottom: 1px solid #333;
+  color: #ffd700;
+}
+
+.AddEditUnit .ant-modal-title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.AddEditUnit .ant-form-item-label > label {
+  color: #ffd700 !important;
+  font-weight: 500 !important;
+}
+
+.AddEditUnit .ant-input,
+.AddEditUnit .ant-select-selector {
+  background-color: #242424 !important;
+  border-color: #333 !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+.AddEditUnit .ant-input:hover,
+.AddEditUnit .ant-input:focus,
+.AddEditUnit .ant-select-selector:hover,
+.AddEditUnit .ant-select-selector:focus {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2) !important;
+}
+
+.AddEditUnit .ant-upload-dragger {
+  border: 2px dashed #ffd700 !important;
+  border-radius: 8px !important;
+  background-color: rgba(255, 215, 0, 0.05) !important;
+  transition: all 0.3s ease !important;
+}
+
+.AddEditUnit .ant-upload-dragger:hover {
+  border-color: #ffc107 !important;
+  background-color: rgba(255, 215, 0, 0.1) !important;
+}
+
+.AddEditUnit .ant-upload-dragger .ant-upload-text {
+  color: #ffd700 !important;
+  font-weight: 500 !important;
+}
+
+.AddEditUnit .previewBox {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #242424;
+  border-radius: 8px;
+  border: 1px solid #333;
+  text-align: center;
+}
+
+.AddEditUnit .previewBox h4 {
+  color: #ffd700;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.AddEditUnit .ant-btn-primary {
+  background: linear-gradient(45deg, #ffd700, #ffc107) !important;
+  border: none !important;
+  color: #000 !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.AddEditUnit .ant-btn-primary:hover {
+  background: linear-gradient(45deg, #ffc107, #ffd700) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6) !important;
+}
+
+.AddEditUnit .ant-btn {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}

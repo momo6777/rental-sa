@@ -1,0 +1,59 @@
+.settingsPage {
+  background-color: #0f0f0f;
+  min-height: 100vh;
+  color: #fff;
+  padding: 20px;
+}
+
+.pageHeader {
+  margin-bottom: 24px;
+}
+
+.pageHeader h1 {
+  color: #ffd700;
+  font-size: 24px;
+  margin: 0;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.card {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  border: 1px solid #333;
+  margin-bottom: 24px;
+}
+
+.card :global(.ant-card-head-title) {
+  color: #ffd700;
+  font-size: 18px;
+}
+
+.card :global(.ant-card-extra) {
+  color: #fff;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 24px;
+}
+
+@media (max-width: 768px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.accessDenied {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+  text-align: center;
+  padding: 40px 20px;
+  margin: 0;
+}

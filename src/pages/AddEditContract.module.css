@@ -1,0 +1,64 @@
+/* Styles for Add/Edit Contract modal */
+.AddEditContract {
+  background-color: #0f0f0f;
+  color: #fff;
+}
+
+.AddEditContract .ant-modal-content {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.AddEditContract .ant-modal-header {
+  background: linear-gradient(90deg, #1a1a1a, #242424);
+  border-bottom: 1px solid #333;
+  color: #ffd700;
+}
+
+.AddEditContract .ant-modal-title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.AddEditContract .ant-form-item-label > label {
+  color: #ffd700 !important;
+  font-weight: 500 !important;
+}
+
+.AddEditContract .ant-input,
+.AddEditContract .ant-select-selector {
+  background-color: #242424 !important;
+  border-color: #333 !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+.AddEditContract .ant-input:hover,
+.AddEditContract .ant-input:focus,
+.AddEditContract .ant-select-selector:hover,
+.AddEditContract .ant-select-selector:focus {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2) !important;
+}
+
+.AddEditContract .ant-btn-primary {
+  background: linear-gradient(45deg, #ffd700, #ffc107) !important;
+  border: none !important;
+  color: #000 !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.AddEditContract .ant-btn-primary:hover {
+  background: linear-gradient(45deg, #ffc107, #ffd700) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6) !important;
+}
+
+.AddEditContract .ant-btn {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
