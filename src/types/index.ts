@@ -47,6 +47,7 @@ export interface Contract {
   payment_frequency: 'monthly' | 'quarterly' | 'yearly';
   status: 'active' | 'expired' | 'terminated';
   ejar_contract_number?: string;
+  contract_number?: string;
   vat_included: boolean;
   deposit_amount: number;
   created_at: string;

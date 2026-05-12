@@ -154,7 +154,7 @@ const ContractsPage = () => {
                   <tr key={c.id} className="hover:bg-surface-container-lowest transition-colors">
                     <td className="px-6 py-4">
                       <span className="bg-primary-container/10 text-primary px-3 py-1 rounded-lg text-label-sm font-bold">
-                        {c.id?.slice(0, 8)}...
+                        {c.contract_number || c.id?.slice(0, 8)}...
                       </span>
                     </td>
                     <td className="px-6 py-4 font-bold text-on-surface">{c.tenant?.full_name_ar || c.tenant_id?.slice(0, 8)}</td>
@@ -203,7 +203,7 @@ const ContractsPage = () => {
             <div key={c.id} className="bg-white rounded-xl border border-outline-variant p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="bg-primary-container/10 text-primary px-3 py-1 rounded-lg text-label-sm font-bold">
-                  {c.id?.slice(0, 8)}...
+                  {c.contract_number || c.id?.slice(0, 8)}...
                 </span>
                 <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusColor[c.status] || 'bg-surface-container text-on-surface-variant'}`}>
                   {statusLabel[c.status] || c.status}

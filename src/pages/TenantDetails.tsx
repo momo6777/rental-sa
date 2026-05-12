@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
@@ -6,6 +6,13 @@ const TenantDetails = () => {
   const { id: tenantId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const contractNumberByContractId = useMemo(() => {
+    const map: Record<string, string> = {};
+    contracts.forEach(c => {
+      map[c.id] = c.contract_number || c.id?.slice(0, 8);
+    });
+    return map;
+  }, [contracts]);
   const [tenant, setTenant] = useState<any>(null);
   const [contracts, setContracts] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
@@ -165,7 +172,7 @@ const TenantDetails = () => {
                 <tr key={c.id} className="hover:bg-surface-container-lowest transition-colors">
                   <td className="px-6 py-4">
                     <span className="bg-primary-container/10 text-primary px-3 py-1 rounded-lg text-label-sm font-bold">
-                      {c.id?.slice(0, 8)}...
+                      {c.contract_number || c.id?.slice(0, 8)}...
                     </span>
                   </td>
                   <td className="px-6 py-4 text-on-surface-variant">{c.unit_id?.slice(0, 8) || '-'}</td>
@@ -218,7 +225,7 @@ const TenantDetails = () => {
                       {p.id?.slice(0, 8)}...
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-on-surface-variant">{p.contract_id?.slice(0, 8) || '-'}</td>
+                  <td className="px-6 py-4 text-on-surface-variant">{contractNumberByContractId[p.contract_id] || p.contract_id?.slice(0, 8) || '-'}</td>
                   <td className="px-6 py-4 font-bold text-primary">{p.total_amount?.toLocaleString()} ر.س</td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusBadge[p.status] || ''}`}>

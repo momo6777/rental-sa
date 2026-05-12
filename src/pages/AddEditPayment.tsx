@@ -16,7 +16,7 @@ export type AddEditPaymentProps = {
 const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, visible }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [contracts, setContracts] = useState<Array<{ id: string; ejar_contract_number: string }>>([]);
+  const [contracts, setContracts] = useState<Array<{ id: string; ejar_contract_number: string; contract_number: string }>>([]);
   const [isCommercial, setIsCommercial] = useState(false);
 
   const isEditing = !!paymentId;
@@ -66,7 +66,7 @@ const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, vis
 
   const fetchContracts = async () => {
     try {
-      const { data, error } = await supabase.from('contracts').select('id, ejar_contract_number').order('id');
+      const { data, error } = await supabase.from('contracts').select('id, ejar_contract_number, contract_number').order('id');
       if (error) throw error;
       setContracts(data || []);
     } catch (err) {
@@ -148,7 +148,7 @@ const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, vis
           <Select placeholder="اختر عقد" onChange={handleContractChange}>
             {contracts.map(c => (
               <Option key={c.id} value={c.id}>
-                {c.ejar_contract_number ? `${c.ejar_contract_number} (${c.id.slice(0, 6)})` : c.id.slice(0, 6)}
+                {c.contract_number || c.ejar_contract_number ? `${c.contract_number || c.ejar_contract_number} (${c.id.slice(0, 6)})` : c.id.slice(0, 6)}
               </Option>
             ))}
           </Select>
