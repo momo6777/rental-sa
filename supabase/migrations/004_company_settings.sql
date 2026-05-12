@@ -17,12 +17,18 @@ alter table company_settings enable row level security;
 
 -- Admin can read/write all
 create policy "admin_all_company_settings" on company_settings
-  for all using (auth.jwt() ->> 'role' = 'admin')
-  with check (auth.jwt() ->> 'role' = 'admin');
+  for all using (
+    exists (select 1 from profiles where profiles.user_id = auth.uid() and profiles.role = 'admin')
+  )
+  with check (
+    exists (select 1 from profiles where profiles.user_id = auth.uid() and profiles.role = 'admin')
+  );
 
 -- Accountant can read only
 create policy "accountant_read_company_settings" on company_settings
-  for select using (auth.jwt() ->> 'role' = 'accountant');
+  for select using (
+    exists (select 1 from profiles where profiles.user_id = auth.uid() and profiles.role = 'accountant')
+  );
 
 -- Insert default record
 insert into company_settings (company_name_ar, vat_number, company_address)
