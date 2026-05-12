@@ -1,3 +1,7 @@
+import { Buffer as BufferPolyfill } from 'buffer';
+(window as any).Buffer = BufferPolyfill;
+(globalThis as any).Buffer = BufferPolyfill;
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
