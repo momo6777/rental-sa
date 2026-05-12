@@ -68,6 +68,14 @@ export interface Payment {
   created_at: string;
 }
 
+export interface MaintenanceExpense {
+  id: string;
+  request_id: string;
+  description: string;
+  amount: number;
+  created_at: string;
+}
+
 export interface MaintenanceRequest {
   id: string;
   unit_id: string;
@@ -80,6 +88,7 @@ export interface MaintenanceRequest {
   cost?: number;
   completed_at?: string;
   created_at: string;
+  expenses?: MaintenanceExpense[];
 }
 
 export interface Profile {

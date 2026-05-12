@@ -119,6 +119,11 @@ const styles = StyleSheet.create({
   },
 });
 
+export type PaymentVoucherExpense = {
+  description: string;
+  amount: number;
+};
+
 export type PaymentVoucherData = {
   requestId: string;
   title: string;
@@ -130,6 +135,7 @@ export type PaymentVoucherData = {
   paymentMethod: string;
   paymentDate: string;
   referenceNumber: string;
+  expenses?: PaymentVoucherExpense[];
 };
 
 type Props = {
@@ -161,7 +167,11 @@ export const PaymentVoucherPDF: React.FC<Props> = ({ data }) => {
     return new Date(dateStr).toLocaleDateString('ar-SA');
   };
 
-  const amountWords = numberToArabicWords(Math.floor(data.cost)) + ' ريالاً' + (data.cost % 1 ? ' و' + Math.round((data.cost % 1) * 100) + ' هللة' : '');
+  const totalExpenses = data.expenses && data.expenses.length > 0
+    ? data.expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+    : data.cost;
+
+  const amountWords = numberToArabicWords(Math.floor(totalExpenses)) + ' ريالاً' + (totalExpenses % 1 ? ' و' + Math.round((totalExpenses % 1) * 100) + ' هللة' : '');
 
   const DocumentContent = (
     <Document>
@@ -221,9 +231,25 @@ export const PaymentVoucherPDF: React.FC<Props> = ({ data }) => {
           )}
         </View>
 
+        {data.expenses && data.expenses.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>تفاصيل المصروفات</Text>
+            {data.expenses.map((exp, i) => (
+              <View key={i} style={styles.row}>
+                <Text style={{ ...styles.label, width: 200 }}>{exp.description}</Text>
+                <Text style={styles.value}>{Number(exp.amount).toFixed(2)} ر.س</Text>
+              </View>
+            ))}
+            <View style={{ ...styles.row, marginTop: 8, borderTopWidth: 1, borderTopColor: '#ccc', borderTopStyle: 'solid', paddingTop: 6 }}>
+              <Text style={{ ...styles.label, width: 200, fontWeight: 'bold' }}>الإجمالي</Text>
+              <Text style={{ ...styles.value, fontWeight: 'bold' }}>{totalExpenses.toFixed(2)} ر.س</Text>
+            </View>
+          </View>
+        )}
+
         <View style={styles.amountBox}>
           <Text style={styles.amountLabel}>المبلغ</Text>
-          <Text style={styles.amountText}>{data.cost.toFixed(2)} ر.س</Text>
+          <Text style={styles.amountText}>{totalExpenses.toFixed(2)} ر.س</Text>
           <Text style={styles.amountWords}>{amountWords}</Text>
         </View>
 

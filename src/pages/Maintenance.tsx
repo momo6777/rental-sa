@@ -1,6 +1,6 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { Modal, Form, Input, Select, Upload, DatePicker, message } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { UploadOutlined, PlusOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -65,6 +65,12 @@ const MaintenancePage = () => {
   const [payRequest, setPayRequest] = useState<any>(null);
   const [voucherData, setVoucherData] = useState<PaymentVoucherData | null>(null);
   const [payForm] = Form.useForm();
+  const [expensesMap, setExpensesMap] = useState<Record<string, any[]>>({});
+  const [expModalVisible, setExpModalVisible] = useState(false);
+  const [expRequestId, setExpRequestId] = useState<string | null>(null);
+  const [expForm] = Form.useForm();
+  const [expSaving, setExpSaving] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchRequests();
@@ -88,6 +94,23 @@ const MaintenancePage = () => {
 
       if (error) throw error;
       setRequests(data || []);
+
+      const ids = (data || []).map((r: any) => r.id);
+      if (ids.length > 0) {
+        const { data: expData } = await supabase
+          .from('maintenance_expenses')
+          .select('*')
+          .in('request_id', ids)
+          .order('created_at', { ascending: true });
+        const map: Record<string, any[]> = {};
+        (expData || []).forEach((e: any) => {
+          if (!map[e.request_id]) map[e.request_id] = [];
+          map[e.request_id].push(e);
+        });
+        setExpensesMap(map);
+      } else {
+        setExpensesMap({});
+      }
     } catch (err: any) {
       message.error(err.message || 'فشل تحميل طلبات الصيانة');
     } finally {
@@ -208,18 +231,64 @@ const MaintenancePage = () => {
 
   const handlePayGenerate = (values: any) => {
     if (!payRequest) return;
+    const exps = expensesMap[payRequest.id] || [];
+    const totalExp = exps.reduce((s: number, e: any) => s + Number(e.amount), 0);
     setVoucherData({
       requestId: payRequest.id,
       title: payRequest.title,
       description: payRequest.description,
-      cost: Number(payRequest.cost) || 0,
+      cost: totalExp || Number(payRequest.cost) || 0,
       unitNumber: payRequest.unit?.unit_number,
       propertyName: payRequest.unit?.property?.name_ar,
       payeeName: values.payee_name,
       paymentMethod: values.payment_method,
       paymentDate: values.payment_date?.format('YYYY-MM-DD') || new Date().toISOString(),
       referenceNumber: values.reference_number,
+      expenses: exps.map((e: any) => ({ description: e.description, amount: e.amount })),
     });
+  };
+
+  const handleOpenExpense = (requestId: string) => {
+    setExpRequestId(requestId);
+    expForm.resetFields();
+    setExpModalVisible(true);
+  };
+
+  const handleAddExpense = async (values: any) => {
+    if (!expRequestId) return;
+    try {
+      setExpSaving(true);
+      const payload = {
+        request_id: expRequestId,
+        description: values.description,
+        amount: Number(values.amount),
+      };
+      const { error } = await supabase.from('maintenance_expenses').insert([payload]);
+      if (error) throw error;
+      message.success('تم إضافة المصروف');
+      setExpModalVisible(false);
+      fetchRequests();
+    } catch (err: any) {
+      message.error(err.message || 'فشل إضافة المصروف');
+    } finally {
+      setExpSaving(false);
+    }
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (!window.confirm('حذف هذا المصروف؟')) return;
+    try {
+      const { error } = await supabase.from('maintenance_expenses').delete().eq('id', expenseId);
+      if (error) throw error;
+      message.success('تم حذف المصروف');
+      fetchRequests();
+    } catch (err: any) {
+      message.error(err.message || 'فشل حذف المصروف');
+    }
+  };
+
+  const toggleExpanded = (id: string) => {
+    setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   const handleUploadImage = async (file: File) => {
@@ -317,82 +386,131 @@ const MaintenancePage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
-                {filtered.map((r) => (
-                  <tr key={r.id} className="hover:bg-surface-container-lowest transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-on-surface">{r.title}</div>
-                      <div className="text-label-sm text-on-surface-variant mt-0.5">
-                        وحدة {r.unit?.unit_number || '-'}
-                        {' | '}
-                        {r.unit?.property?.name_ar || '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${priorityColors[r.priority] || ''}`}>
-                        {priorityLabels[r.priority] || r.priority}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusColors[r.status] || ''}`}>
-                          {statusLabels[r.status] || r.status}
-                        </span>
-                        {isAdmin && (STATUS_FLOW[r.status]?.length > 0) && (
+                {filtered.map((r) => {
+                  const exps = expensesMap[r.id] || [];
+                  const totalExp = exps.reduce((s: number, e: any) => s + Number(e.amount), 0);
+                  const isExpanded = expandedRows[r.id];
+                  return (<>
+                    <tr key={r.id} className="hover:bg-surface-container-lowest transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-on-surface">{r.title}</div>
+                        <div className="text-label-sm text-on-surface-variant mt-0.5">
+                          وحدة {r.unit?.unit_number || '-'}
+                          {' | '}
+                          {r.unit?.property?.name_ar || '-'}
+                        </div>
+                        {exps.length > 0 && (
                           <button
-                            onClick={() => handleStatusChange(r, STATUS_FLOW[r.status][0])}
-                            className="text-label-sm text-primary hover:text-primary-container transition-colors font-bold"
+                            onClick={() => toggleExpanded(r.id)}
+                            className="text-label-sm text-primary hover:text-primary-container transition-colors mt-1 font-bold"
                           >
-                            {r.status === 'open' ? 'بدء التنفيذ' : 'إكمال'}
+                            {isExpanded ? 'إخفاء المصروفات' : `${exps.length} مصروف (${totalExp.toLocaleString()} ر.س)`}
                           </button>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-on-surface-variant">
-                      {r.cost ? `ر.س ${r.cost.toLocaleString()}` : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-on-surface-variant">
-                      {r.created_at ? new Date(r.created_at).toLocaleDateString('ar-SA') : '-'}
-                    </td>
-                    <td className="px-6 py-4">
-                      {r.image_url ? (
-                        <img
-                          src={r.image_url}
-                          alt="صورة"
-                          className="w-14 h-14 rounded-lg object-cover border border-outline-variant"
-                        />
-                      ) : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-left">
-                      {isAdmin && (
-                        <div className="flex gap-1 justify-end">
-                          <button
-                            onClick={() => handleEdit(r)}
-                            className="p-2 text-on-surface-variant hover:text-primary transition-colors"
-                            title="تعديل"
-                          >
-                            <span className="material-symbols-outlined text-[20px]">edit</span>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(r.id)}
-                            className="p-2 text-on-surface-variant hover:text-error transition-colors"
-                            title="حذف"
-                          >
-                            <span className="material-symbols-outlined text-[20px]">delete</span>
-                          </button>
-                          {r.status === 'completed' && (
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${priorityColors[r.priority] || ''}`}>
+                          {priorityLabels[r.priority] || r.priority}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusColors[r.status] || ''}`}>
+                            {statusLabels[r.status] || r.status}
+                          </span>
+                          {isAdmin && (STATUS_FLOW[r.status]?.length > 0) && (
                             <button
-                              onClick={() => handlePayOpen(r)}
-                              className="p-2 text-on-surface-variant hover:text-secondary transition-colors"
-                              title="سند صرف"
+                              onClick={() => handleStatusChange(r, STATUS_FLOW[r.status][0])}
+                              className="text-label-sm text-primary hover:text-primary-container transition-colors font-bold"
                             >
-                              <span className="material-symbols-outlined text-[20px]">payments</span>
+                              {r.status === 'open' ? 'بدء التنفيذ' : 'إكمال'}
                             </button>
                           )}
                         </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 text-on-surface-variant">
+                        {totalExp ? `ر.س ${totalExp.toLocaleString()}` : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-on-surface-variant">
+                        {r.created_at ? new Date(r.created_at).toLocaleDateString('ar-SA') : '-'}
+                      </td>
+                      <td className="px-6 py-4">
+                        {r.image_url ? (
+                          <img
+                            src={r.image_url}
+                            alt="صورة"
+                            className="w-14 h-14 rounded-lg object-cover border border-outline-variant"
+                          />
+                        ) : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-left">
+                        {isAdmin && (
+                          <div className="flex gap-1 justify-end">
+                            <button
+                              onClick={() => handleEdit(r)}
+                              className="p-2 text-on-surface-variant hover:text-primary transition-colors"
+                              title="تعديل"
+                            >
+                              <span className="material-symbols-outlined text-[20px]">edit</span>
+                            </button>
+                            <button
+                              onClick={() => handleOpenExpense(r.id)}
+                              className="p-2 text-on-surface-variant hover:text-secondary transition-colors"
+                              title="إدارة المصروفات"
+                            >
+                              <span className="material-symbols-outlined text-[20px]">receipt_long</span>
+                            </button>
+                            <button
+                              onClick={() => handleDelete(r.id)}
+                              className="p-2 text-on-surface-variant hover:text-error transition-colors"
+                              title="حذف"
+                            >
+                              <span className="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                            {r.status === 'completed' && (
+                              <button
+                                onClick={() => handlePayOpen(r)}
+                                className="p-2 text-on-surface-variant hover:text-secondary transition-colors"
+                                title="سند صرف"
+                              >
+                                <span className="material-symbols-outlined text-[20px]">payments</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                    {isExpanded && exps.length > 0 && (
+                      <tr key={`${r.id}-exps`} className="bg-surface-container-lowest">
+                        <td colSpan={7} className="px-6 py-3">
+                          <div className="space-y-1">
+                            {exps.map((e: any) => (
+                              <div key={e.id} className="flex items-center justify-between text-label-sm">
+                                <span className="text-on-surface">{e.description}</span>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-secondary font-bold">{Number(e.amount).toLocaleString()} ر.س</span>
+                                  {isAdmin && (
+                                    <button
+                                      onClick={() => handleDeleteExpense(e.id)}
+                                      className="text-error hover:text-error/70 transition-colors"
+                                      title="حذف"
+                                    >
+                                      <span className="material-symbols-outlined text-[16px]">close</span>
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                            <div className="flex items-center justify-between text-label-sm font-bold border-t border-outline-variant pt-1 mt-1">
+                              <span>الإجمالي</span>
+                              <span className="text-secondary">{totalExp.toLocaleString()} ر.س</span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>);
+                })}
               </tbody>
             </table>
           </div>
@@ -402,7 +520,11 @@ const MaintenancePage = () => {
         </div>
 
         <div className="block md:hidden space-y-3">
-          {filtered.map((r) => (
+          {filtered.map((r) => {
+            const exps = expensesMap[r.id] || [];
+            const totalExp = exps.reduce((s: number, e: any) => s + Number(e.amount), 0);
+            const isExpanded = expandedRows[r.id];
+            return (
             <div key={r.id} className="bg-white rounded-xl border border-outline-variant p-4">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 min-w-0 ml-2">
@@ -419,7 +541,7 @@ const MaintenancePage = () => {
                 <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusColors[r.status] || ''}`}>
                   {statusLabels[r.status] || r.status}
                 </span>
-                {r.cost ? <span className="text-label-sm text-on-surface-variant">ر.س {r.cost.toLocaleString()}</span> : null}
+                {totalExp ? <span className="text-label-sm text-secondary font-bold">ر.س {totalExp.toLocaleString()}</span> : null}
                 <span className="text-label-sm text-on-surface-variant mr-auto">
                   {r.created_at ? new Date(r.created_at).toLocaleDateString('ar-SA') : ''}
                 </span>
@@ -427,11 +549,49 @@ const MaintenancePage = () => {
               {r.image_url && (
                 <img src={r.image_url} alt="" className="w-full h-32 rounded-lg object-cover border border-outline-variant mb-3" />
               )}
+
+              {/* Mobile expenses */}
+              {exps.length > 0 && (
+                <div className="mb-3">
+                  <button
+                    onClick={() => toggleExpanded(r.id)}
+                    className="text-label-sm text-primary font-bold flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">{isExpanded ? 'expand_less' : 'expand_more'}</span>
+                    {isExpanded ? 'إخفاء المصروفات' : `${exps.length} مصروف (${totalExp.toLocaleString()} ر.س)`}
+                  </button>
+                  {isExpanded && (
+                    <div className="mt-2 space-y-1 pr-2 border-r-2 border-primary/30">
+                      {exps.map((e: any) => (
+                        <div key={e.id} className="flex items-center justify-between text-label-sm">
+                          <span>{e.description}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-secondary font-bold">{Number(e.amount).toLocaleString()} ر.س</span>
+                            {isAdmin && (
+                              <button onClick={() => handleDeleteExpense(e.id)} className="text-error hover:text-error/70" title="حذف">
+                                <span className="material-symbols-outlined text-[14px]">close</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between text-label-sm font-bold border-t border-outline-variant pt-1 mt-1">
+                        <span>الإجمالي</span>
+                        <span className="text-secondary">{totalExp.toLocaleString()} ر.س</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex gap-2 pt-3 border-t border-outline-variant">
                 {isAdmin && (
                   <>
                     <button onClick={() => handleEdit(r)} className="flex-1 py-2 rounded-lg border border-outline-variant text-label-sm font-bold hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
                       <span className="material-symbols-outlined text-[16px]">edit</span> تعديل
+                    </button>
+                    <button onClick={() => handleOpenExpense(r.id)} className="flex-1 py-2 rounded-lg border border-outline-variant text-label-sm font-bold hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">receipt_long</span> مصروفات
                     </button>
                     <button onClick={() => handleDelete(r.id)} className="flex-1 py-2 rounded-lg border border-error/30 text-error text-label-sm font-bold hover:bg-error/5 transition-colors flex items-center justify-center gap-1">
                       <span className="material-symbols-outlined text-[16px]">delete</span> حذف
@@ -445,7 +605,8 @@ const MaintenancePage = () => {
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
           <div className="p-3 text-center">
             <p className="text-body-sm text-on-surface-variant">عرض {filtered.length} من أصل {requests.length} طلب</p>
           </div>
@@ -463,14 +624,32 @@ const MaintenancePage = () => {
       >
         {!voucherData ? (
           <Form form={payForm} layout="vertical" onFinish={handlePayGenerate}>
-            {payRequest && (
-              <div className="bg-secondary/5 p-3 rounded-xl border border-secondary/20 mb-4 text-center">
-                <p className="text-body-sm text-on-surface-variant">
-                  مبلغ الصيانة: <strong className="text-secondary">{Number(payRequest.cost)?.toLocaleString() || 0} ر.س</strong>
-                </p>
-              </div>
-            )}
-            <Form.Item name="payee_name" label="اسم المستفيد" rules={[{ required: true, message: 'أدخل اسم المستفيد' }]}>
+            {payRequest && (() => {
+              const exps = expensesMap[payRequest.id] || [];
+              const total = exps.reduce((s: number, e: any) => s + Number(e.amount), 0);
+              return (
+                <div className="bg-secondary/5 p-3 rounded-xl border border-secondary/20 mb-4">
+                  <p className="text-body-sm text-on-surface-variant mb-2 text-center font-bold">تفاصيل المصروفات</p>
+                  {exps.length > 0 ? (
+                    <>
+                      {exps.map((e: any) => (
+                        <div key={e.id} className="flex items-center justify-between text-label-sm">
+                          <span>{e.description}</span>
+                          <span>{Number(e.amount).toLocaleString()} ر.س</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between text-label-sm font-bold border-t border-secondary/20 pt-1 mt-1">
+                        <span>الإجمالي</span>
+                        <span className="text-secondary">{total.toLocaleString()} ر.س</span>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-label-sm text-center text-on-surface-variant">لا توجد مصروفات مسجلة</p>
+                  )}
+                </div>
+              );
+            })()}
+            <Form.Item name="payee_name" label="اسم المستفيد" rules={[{ required: true, message: 'أدخل اسم المستفيد' }]}>  
               <Input placeholder="اسم المقاول أو المورد" style={{ borderRadius: 8 }} />
             </Form.Item>
             <Form.Item name="payment_method" label="طريقة الدفع" rules={[{ required: true, message: 'اختر طريقة الدفع' }]}>
@@ -525,6 +704,26 @@ const MaintenancePage = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Expense Modal */}
+      <Modal
+        title="إضافة مصروف"
+        open={expModalVisible}
+        onCancel={() => setExpModalVisible(false)}
+        onOk={() => expForm.submit()}
+        confirmLoading={expSaving}
+        width={420}
+        style={{ top: 40 }}
+      >
+        <Form form={expForm} layout="vertical" onFinish={handleAddExpense}>
+          <Form.Item name="description" label="وصف المصروف" rules={[{ required: true, message: 'أدخل وصف المصروف' }]}>
+            <Input placeholder="مثال: شراء قطع الكهرباء" style={{ borderRadius: 8 }} />
+          </Form.Item>
+          <Form.Item name="amount" label="المبلغ" rules={[{ required: true, message: 'أدخل المبلغ' }]}>
+            <Input type="number" min={0} placeholder="ر.س" style={{ borderRadius: 8 }} />
+          </Form.Item>
+        </Form>
       </Modal>
 
       {/* Add/Edit Modal */}
