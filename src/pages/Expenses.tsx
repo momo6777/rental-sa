@@ -1,9 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { Modal, Form, Input, InputNumber, Select, DatePicker, Button, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import dayjs from 'dayjs';
+import type { GeneralExpenseVoucherData } from '../components/GeneralExpenseVoucherPDF';
+
+const GeneralExpenseVoucherPDF = lazy(() =>
+  import('../components/GeneralExpenseVoucherPDF').then((m) => ({ default: m.GeneralExpenseVoucherPDF }))
+);
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -47,6 +53,7 @@ const ExpensesPage = () => {
   const [saving, setSaving] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [filtered, setFiltered] = useState<any[]>([]);
+  const [voucherExpense, setVoucherExpense] = useState<GeneralExpenseVoucherData | null>(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -246,7 +253,19 @@ const ExpensesPage = () => {
                     <td className="px-6 py-4">{new Date(e.expense_date).toLocaleDateString('ar-SA')}</td>
                     <td className="px-6 py-4 text-on-surface-variant max-w-[200px] truncate">{e.notes || '—'}</td>
                     <td className="px-6 py-4">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
+                        <Suspense fallback={<span className="text-label-sm text-on-surface-variant">...</span>}>
+                          <ErrorBoundary>
+                            <GeneralExpenseVoucherPDF data={{
+                              id: e.id,
+                              description: e.description,
+                              amount: e.amount,
+                              category: e.category,
+                              expenseDate: e.expense_date,
+                              notes: e.notes,
+                            }} />
+                          </ErrorBoundary>
+                        </Suspense>
                         <button
                           onClick={() => openEditModal(e)}
                           className="text-primary hover:underline text-label-sm font-bold"
