@@ -1,17 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { Button } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { getCompanySettings, CompanySettings } from '../lib/companySettings';
-
-try {
-  Font.register({
-    family: 'Amiri',
-    src: '/fonts/Amiri-Regular.ttf',
-  });
-} catch (e) {
-  console.warn('Amiri font registration failed:', e);
-}
 
 const DEFAULT_SETTINGS: CompanySettings = {
   id: '',
@@ -25,7 +16,6 @@ const DEFAULT_SETTINGS: CompanySettings = {
 const styles = StyleSheet.create({
   page: {
     padding: 40,
-    fontFamily: 'Amiri',
     direction: 'rtl',
   },
   header: {

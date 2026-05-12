@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import AddEditPayment from './AddEditPayment';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const ReceiptVoucherPDF = lazy(() =>
   import('../components/ReceiptVoucherPDF').then((m) => ({ default: m.ReceiptVoucherPDF }))
@@ -216,7 +217,9 @@ const PaymentsPage = () => {
                       <td className="px-card-padding py-4">
                         {p.status === 'paid' && p.contract && (
                           <Suspense fallback={<span className="text-label-sm text-on-surface-variant">جاري التحميل...</span>}>
-                            <ReceiptVoucherPDF payment={p} />
+                            <ErrorBoundary>
+                              <ReceiptVoucherPDF payment={p} />
+                            </ErrorBoundary>
                           </Suspense>
                         )}
                       </td>
@@ -275,7 +278,9 @@ const PaymentsPage = () => {
               {p.status === 'paid' && p.contract && (
                 <div className="mt-3 pt-3 border-t border-outline-variant flex justify-center">
                   <Suspense fallback={<span className="text-label-sm text-on-surface-variant">جاري التحميل...</span>}>
-                    <ReceiptVoucherPDF payment={p} />
+                    <ErrorBoundary>
+                      <ReceiptVoucherPDF payment={p} />
+                    </ErrorBoundary>
                   </Suspense>
                 </div>
               )}

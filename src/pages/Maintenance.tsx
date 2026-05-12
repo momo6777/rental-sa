@@ -3,6 +3,7 @@ import { Modal, Form, Input, Select, Upload, DatePicker, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import type { PaymentVoucherData } from '../components/PaymentVoucherPDF';
 import dayjs from 'dayjs';
 
@@ -509,7 +510,9 @@ const MaintenancePage = () => {
             </div>
             <div className="flex justify-center">
               <Suspense fallback={<span className="text-label-sm text-on-surface-variant">جاري التحميل...</span>}>
-                <PaymentVoucherPDF data={voucherData} />
+                <ErrorBoundary>
+                  <PaymentVoucherPDF data={voucherData} />
+                </ErrorBoundary>
               </Suspense>
             </div>
             <div className="flex justify-end">

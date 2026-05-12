@@ -1,31 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { Button } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { getCompanySettings, CompanySettings } from '../lib/companySettings';
 
-try {
-  Font.register({
-    family: 'Amiri',
-    src: '/fonts/Amiri-Regular.ttf',
-  });
-} catch (e) {
-  console.warn('Amiri font registration failed:', e);
-}
-
-const DEFAULT_SETTINGS: CompanySettings = {
-  id: '',
-  company_name_ar: 'شركة عقارات للإدارة والتأجير',
-  vat_number: '310123456700003',
-  company_address: 'الرياض، المملكة العربية السعودية',
-  vat_rate: 0.15,
-  notification_days_before_expiry: 90,
-};
-
 const styles = StyleSheet.create({
   page: {
     padding: 40,
-    fontFamily: 'Amiri',
     direction: 'rtl',
   },
   header: {
