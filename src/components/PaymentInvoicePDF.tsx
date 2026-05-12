@@ -7,7 +7,7 @@ import { getCompanySettings, CompanySettings } from '../lib/companySettings';
 
 Font.register({
   family: 'Amiri',
-  src: 'https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHpUrtLMA7w.ttf',
+  src: 'https://fonts.gstatic.com/s/amiri/v30/J7aRnpd8CGxBHpUrtLMA7w.woff2',
 });
 
 const DEFAULT_SETTINGS: CompanySettings = {
