@@ -143,10 +143,11 @@ const DashboardPage = () => {
       const now = new Date();
       for (let i = 11; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthKey = date.toISOString().slice(0, 7);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         const monthPayments = payments.filter((p) => {
-          const paymentDate = new Date(p.paid_date || p.due_date || p.created_at);
-          return paymentDate.toISOString().slice(0, 7) === monthKey;
+          const pd = new Date(p.paid_date || p.due_date || p.created_at);
+          const pKey = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}`;
+          return pKey === monthKey;
         });
         const monthTotal = monthPayments.reduce((sum, p) => sum + (p.total_amount || 0), 0);
         monthlyData.push({
