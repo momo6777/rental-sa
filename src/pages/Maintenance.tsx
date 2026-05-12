@@ -207,7 +207,7 @@ const MaintenancePage = () => {
       requestId: payRequest.id,
       title: payRequest.title,
       description: payRequest.description,
-      cost: payRequest.cost || 0,
+      cost: Number(payRequest.cost) || 0,
       unitNumber: payRequest.unit?.unit_number,
       propertyName: payRequest.unit?.property?.name_ar,
       payeeName: values.payee_name,
@@ -408,6 +408,13 @@ const MaintenancePage = () => {
       >
         {!voucherData ? (
           <Form form={payForm} layout="vertical" onFinish={handlePayGenerate}>
+            {payRequest && (
+              <div className="bg-secondary/5 p-3 rounded-xl border border-secondary/20 mb-4 text-center">
+                <p className="text-body-sm text-on-surface-variant">
+                  مبلغ الصيانة: <strong className="text-secondary">{Number(payRequest.cost)?.toLocaleString() || 0} ر.س</strong>
+                </p>
+              </div>
+            )}
             <Form.Item name="payee_name" label="اسم المستفيد" rules={[{ required: true, message: 'أدخل اسم المستفيد' }]}>
               <Input placeholder="اسم المقاول أو المورد" style={{ borderRadius: 8 }} />
             </Form.Item>
