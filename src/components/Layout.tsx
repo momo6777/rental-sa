@@ -19,6 +19,7 @@ const LayoutComponent = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -44,7 +45,7 @@ const LayoutComponent = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
+      {/* Sidebar - desktop */}
       <aside className="hidden md:flex flex-col h-screen w-64 border-l border-outline-variant bg-surface-container sticky right-0 top-0 z-40">
         <div className="p-container-margin">
           <div className="flex items-center gap-3 mb-10">
@@ -87,11 +88,71 @@ const LayoutComponent = () => {
         </div>
       </aside>
 
+      {/* Mobile sidebar overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileMenuOpen(false)} />
+          <aside className="absolute right-0 top-0 h-full w-72 bg-surface-container border-l border-outline-variant flex flex-col overflow-y-auto">
+            <div className="p-container-margin">
+              <div className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-lg font-bold">ع</div>
+                  <div>
+                    <h1 className="font-headline-md text-headline-md font-bold text-primary">إدارة العقارات</h1>
+                    <p className="text-label-sm text-on-surface-variant">نظام إدارة متكامل</p>
+                  </div>
+                </div>
+                <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-full hover:bg-surface-container-highest transition-colors">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <nav className="space-y-1">
+                {navItems.map((item) => {
+                  const isActive = location.pathname.startsWith(item.key);
+                  return (
+                    <Link
+                      key={item.key}
+                      to={item.key}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all active:scale-95 duration-150 ${
+                        isActive
+                          ? 'text-primary font-bold bg-primary-container/10 border-r-4 border-primary'
+                          : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-highest'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined">{item.icon}</span>
+                      <span className="font-body-md text-body-md">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+            <div className="mt-auto p-container-margin">
+              <button
+                onClick={() => { navigate('/properties?add=true'); setMobileMenuOpen(false); }}
+                className="w-full bg-primary text-on-primary py-3 px-4 rounded-xl font-label-md flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all"
+              >
+                <span className="material-symbols-outlined">add</span>
+                إضافة عقار جديد
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Top Bar */}
         <header className="bg-white/80 backdrop-blur-md shadow-sm flex justify-between items-center w-full px-container-margin py-base h-16 sticky top-0 z-30">
           <div className="flex items-center gap-4 flex-1">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="flex md:hidden items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-on-primary hover:opacity-90 active:scale-95 transition-all font-label-md shadow-lg"
+              aria-label="فتح القائمة"
+            >
+              <span className="text-lg leading-none">☰</span>
+              <span className="hidden sm:inline">القائمة</span>
+            </button>
             <form onSubmit={handleSearch} className="relative w-full max-w-md">
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline">search</span>
               <input
@@ -124,10 +185,47 @@ const LayoutComponent = () => {
         </header>
 
         {/* Page Content */}
-        <div className="p-container-margin space-y-container-margin flex-1">
+        <div className="p-container-margin space-y-container-margin flex-1 pb-28">
           <Outlet />
         </div>
       </main>
+
+      {/* Mobile floating menu button */}
+      <button
+        onClick={() => setMobileMenuOpen(true)}
+        className="md:hidden fixed bottom-20 right-6 z-50 w-14 h-14 rounded-2xl bg-primary text-on-primary shadow-2xl flex items-center justify-center text-2xl hover:opacity-90 active:scale-90 transition-all"
+        aria-label="فتح القائمة"
+      >
+        ☰
+      </button>
+
+      {/* Mobile bottom navigation bar */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-surface-container border-t border-outline-variant flex items-center justify-around px-2 py-1 safe-area-bottom">
+        {navItems.slice(0, 5).map((item) => {
+          const isActive = location.pathname.startsWith(item.key);
+          return (
+            <Link
+              key={item.key}
+              to={item.key}
+              className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg transition-all ${
+                isActive
+                  ? 'text-primary'
+                  : 'text-on-surface-variant hover:text-primary'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
+              <span className="text-[10px] leading-tight">{item.label}</span>
+            </Link>
+          );
+        })}
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg text-on-surface-variant hover:text-primary transition-all"
+        >
+          <span className="material-symbols-outlined text-[22px]">more_horiz</span>
+          <span className="text-[10px] leading-tight">المزيد</span>
+        </button>
+      </nav>
     </div>
   );
 };

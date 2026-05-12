@@ -116,8 +116,8 @@ const TenantsPage = () => {
           <span className="material-symbols-outlined text-5xl text-outline-variant mb-4">group</span>
           <p className="text-on-surface-variant">لا توجد مستأجرين مطابقين</p>
         </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-outline-variant overflow-hidden">
+      ) : (<>
+        <div className="hidden md:block bg-white rounded-xl border border-outline-variant overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-right">
               <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
@@ -192,7 +192,50 @@ const TenantsPage = () => {
             <p className="text-body-sm text-on-surface-variant">عرض {filteredTenants.length} من أصل {tenants.length} مستأجر</p>
           </div>
         </div>
-      )}
+
+        <div className="block md:hidden space-y-3">
+          {filteredTenants.map((tenant) => {
+            const initial = tenant.full_name_ar?.charAt(0) || 'م';
+            return (
+              <div key={tenant.id} className="bg-white rounded-xl border border-outline-variant p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-primary-container text-white rounded-full flex items-center justify-center font-bold text-sm">{initial}</div>
+                  <div className="flex-1">
+                    <p className="font-bold text-on-surface">{tenant.full_name_ar}</p>
+                    <p className="text-body-sm text-on-surface-variant">{tenant.full_name_en || ''}</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${
+                    tenant.absher_verified
+                      ? 'bg-secondary/10 text-secondary border-secondary/20'
+                      : 'bg-surface-container text-on-surface-variant border-outline-variant'
+                  }`}>
+                    {tenant.absher_verified ? 'محقق' : 'غير محقق'}
+                  </span>
+                </div>
+                <div className="space-y-1.5 text-body-sm">
+                  <p><span className="text-on-surface-variant">الهاتف: </span>{tenant.phone}</p>
+                  <p><span className="text-on-surface-variant">الجنسية: </span>{tenant.nationality}</p>
+                  <p><span className="text-on-surface-variant">الهوية: </span>{tenant.national_id || '-'}</p>
+                  <p><span className="text-on-surface-variant">الإقامة: </span>{tenant.iqama_number || '-'}</p>
+                </div>
+                <div className="flex gap-2 mt-3 pt-3 border-t border-outline-variant">
+                  <button onClick={() => handleViewTenant(tenant)} className="flex-1 py-2 rounded-lg border border-outline-variant text-label-sm font-bold hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+                    <span className="material-symbols-outlined text-[16px]">visibility</span> عرض
+                  </button>
+                  {user?.role === 'admin' && (
+                    <button onClick={() => handleEditTenant(tenant)} className="flex-1 py-2 rounded-lg border border-outline-variant text-label-sm font-bold hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">edit</span> تعديل
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <div className="p-3 text-center">
+            <p className="text-body-sm text-on-surface-variant">عرض {filteredTenants.length} من أصل {tenants.length} مستأجر</p>
+          </div>
+        </div>
+      </>)}
 
       <AddEditTenant
         tenantId={selectedTenant?.id || undefined}

@@ -204,8 +204,8 @@ const UnitsPage = () => {
           <span className="material-symbols-outlined text-5xl text-outline-variant mb-4">home_work</span>
           <p className="text-on-surface-variant">لا توجد وحدات مطابقة</p>
         </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-outline-variant overflow-hidden">
+      ) : (<>
+        <div className="hidden md:block bg-white rounded-xl border border-outline-variant overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-right">
               <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
@@ -267,7 +267,35 @@ const UnitsPage = () => {
             <p className="text-body-sm text-on-surface-variant">عرض {filteredUnits.length} من أصل {units.length} وحدة</p>
           </div>
         </div>
-      )}
+
+        <div className="block md:hidden space-y-3">
+          {filteredUnits.map((unit) => (
+            <div key={unit.id} className="bg-white rounded-xl border border-outline-variant p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-bold text-on-surface">{unit.unit_number}</span>
+                <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusBadge[unit.status] || 'bg-surface-container text-on-surface-variant'}`}>
+                  {statusLabel[unit.status] || unit.status}
+                </span>
+              </div>
+              <div className="space-y-1.5 text-body-sm">
+                <p><span className="text-on-surface-variant">العقار: </span>{unit.properties?.name_ar || '-'}</p>
+                <p><span className="text-on-surface-variant">النوع: </span>{typeLabel[unit.type] || unit.type}</p>
+                <p><span className="text-on-surface-variant">المساحة: </span>{unit.area_sqm ? `${unit.area_sqm} م²` : '-'}</p>
+                <p className="font-bold text-primary">{unit.rent_price?.toLocaleString()} ر.س</p>
+              </div>
+              {user?.role === 'admin' && (
+                <div className="flex gap-2 mt-3 pt-3 border-t border-outline-variant">
+                  <button onClick={() => handleEdit(unit)} className="flex-1 py-2 rounded-lg border border-outline-variant text-label-sm font-bold hover:bg-surface-container transition-colors">تعديل</button>
+                  <button onClick={() => handleDelete(unit)} className="flex-1 py-2 rounded-lg border border-error/30 text-error text-label-sm font-bold hover:bg-error/5 transition-colors">حذف</button>
+                </div>
+              )}
+            </div>
+          ))}
+          <div className="p-3 text-center">
+            <p className="text-body-sm text-on-surface-variant">عرض {filteredUnits.length} من أصل {units.length} وحدة</p>
+          </div>
+        </div>
+      </>)}
 
       <AddEditUnit
         unitId={selectedUnit?.id || undefined}

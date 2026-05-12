@@ -296,8 +296,8 @@ const MaintenancePage = () => {
           <span className="material-symbols-outlined text-5xl text-outline-variant mb-4">build</span>
           <p className="text-on-surface-variant">لا توجد طلبات صيانة مطابقة</p>
         </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-outline-variant overflow-hidden">
+      ) : (<>
+        <div className="hidden md:block bg-white rounded-xl border border-outline-variant overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-right">
               <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
@@ -395,7 +395,57 @@ const MaintenancePage = () => {
             <p className="text-body-sm text-on-surface-variant">عرض {filtered.length} من أصل {requests.length} طلب</p>
           </div>
         </div>
-      )}
+
+        <div className="block md:hidden space-y-3">
+          {filtered.map((r) => (
+            <div key={r.id} className="bg-white rounded-xl border border-outline-variant p-4">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1 min-w-0 ml-2">
+                  <p className="font-bold text-on-surface truncate">{r.title}</p>
+                  <p className="text-label-sm text-on-surface-variant truncate">
+                    وحدة {r.unit?.unit_number || '-'} | {r.unit?.property?.name_ar || '-'}
+                  </p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-label-sm font-bold border shrink-0 ${priorityColors[r.priority] || ''}`}>
+                  {priorityLabels[r.priority] || r.priority}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusColors[r.status] || ''}`}>
+                  {statusLabels[r.status] || r.status}
+                </span>
+                {r.cost ? <span className="text-label-sm text-on-surface-variant">ر.س {r.cost.toLocaleString()}</span> : null}
+                <span className="text-label-sm text-on-surface-variant mr-auto">
+                  {r.created_at ? new Date(r.created_at).toLocaleDateString('ar-SA') : ''}
+                </span>
+              </div>
+              {r.image_url && (
+                <img src={r.image_url} alt="" className="w-full h-32 rounded-lg object-cover border border-outline-variant mb-3" />
+              )}
+              <div className="flex gap-2 pt-3 border-t border-outline-variant">
+                {isAdmin && (
+                  <>
+                    <button onClick={() => handleEdit(r)} className="flex-1 py-2 rounded-lg border border-outline-variant text-label-sm font-bold hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">edit</span> تعديل
+                    </button>
+                    <button onClick={() => handleDelete(r.id)} className="flex-1 py-2 rounded-lg border border-error/30 text-error text-label-sm font-bold hover:bg-error/5 transition-colors flex items-center justify-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">delete</span> حذف
+                    </button>
+                  </>
+                )}
+                {isAdmin && r.status === 'completed' && (
+                  <button onClick={() => handlePayOpen(r)} className="flex-1 py-2 rounded-lg bg-secondary text-white text-label-sm font-bold hover:opacity-90 transition-colors flex items-center justify-center gap-1">
+                    <span className="material-symbols-outlined text-[16px]">payments</span> صرف
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+          <div className="p-3 text-center">
+            <p className="text-body-sm text-on-surface-variant">عرض {filtered.length} من أصل {requests.length} طلب</p>
+          </div>
+        </div>
+      </>)}
 
       {/* Pay Modal */}
       <Modal

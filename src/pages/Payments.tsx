@@ -171,69 +171,121 @@ const PaymentsPage = () => {
             <div className="h-3 w-32 bg-surface-container-highest rounded"></div>
           </div>
         </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-outline-variant overflow-hidden">
-          <div className="px-card-padding py-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
-            <h3 className="font-headline-md text-headline-md text-on-surface">سجل الفواتير والدفعات</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-right">
-              <thead>
-                <tr className="bg-slate-50 font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">
-                  <th className="px-card-padding py-4 font-semibold">رقم الفاتورة</th>
-                  <th className="px-card-padding py-4 font-semibold">المبلغ</th>
-                  <th className="px-card-padding py-4 font-semibold">الضريبة</th>
-                  <th className="px-card-padding py-4 font-semibold">المجموع</th>
-                  <th className="px-card-padding py-4 font-semibold">تاريخ الاستحقاق</th>
-                  <th className="px-card-padding py-4 font-semibold">حالة الدفع</th>
-                  <th className="px-card-padding py-4 font-semibold">الطريقة</th>
-                  <th className="px-card-padding py-4 font-semibold">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody className="font-body-md text-body-md divide-y divide-outline-variant">
-                {filteredPayments.map((p) => (
-                  <tr key={p.id} className="hover:bg-surface-container-low transition-colors">
-                    <td className="px-card-padding py-4">
-                      <span className="bg-primary-container/10 text-primary px-2 py-1 rounded text-label-sm font-bold">
-                        {p.invoice_number || `#${p.id?.slice(0, 6)}`}
-                      </span>
-                    </td>
-                    <td className="px-card-padding py-4 font-bold text-on-surface">{p.amount?.toLocaleString()} ر.س</td>
-                    <td className="px-card-padding py-4 text-on-surface-variant">{p.vat_amount?.toLocaleString()} ر.س</td>
-                    <td className="px-card-padding py-4 font-bold text-primary">{p.total_amount?.toLocaleString()} ر.س</td>
-                    <td className="px-card-padding py-4 text-on-surface-variant">
-                      {p.due_date ? new Date(p.due_date).toLocaleDateString('ar-SA') : '-'}
-                    </td>
-                    <td className="px-card-padding py-4">
-                      <span className={`px-3 py-1 rounded-full text-label-sm font-medium ${statusColor[p.status] || 'bg-surface-container text-on-surface-variant'}`}>
-                        {statusLabel[p.status] || p.status}
-                      </span>
-                    </td>
-                    <td className="px-card-padding py-4 text-on-surface-variant">{p.payment_method || '-'}</td>
-                    <td className="px-card-padding py-4">
-                      {p.status === 'paid' && p.contract && (
-                        <ReceiptVoucherPDF payment={p} />
-                      )}
-                    </td>
+        ) : (<>
+          <div className="hidden md:block bg-white rounded-xl border border-outline-variant overflow-hidden">
+            <div className="px-card-padding py-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+              <h3 className="font-headline-md text-headline-md text-on-surface">سجل الفواتير والدفعات</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-right">
+                <thead>
+                  <tr className="bg-slate-50 font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">
+                    <th className="px-card-padding py-4 font-semibold">رقم الفاتورة</th>
+                    <th className="px-card-padding py-4 font-semibold">المبلغ</th>
+                    <th className="px-card-padding py-4 font-semibold">الضريبة</th>
+                    <th className="px-card-padding py-4 font-semibold">المجموع</th>
+                    <th className="px-card-padding py-4 font-semibold">تاريخ الاستحقاق</th>
+                    <th className="px-card-padding py-4 font-semibold">حالة الدفع</th>
+                    <th className="px-card-padding py-4 font-semibold">الطريقة</th>
+                    <th className="px-card-padding py-4 font-semibold">إجراءات</th>
                   </tr>
-                ))}
-                {filteredPayments.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-card-padding py-8 text-center text-on-surface-variant">
-                      لا توجد دفعات مسجلة
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="font-body-md text-body-md divide-y divide-outline-variant">
+                  {filteredPayments.map((p) => (
+                    <tr key={p.id} className="hover:bg-surface-container-low transition-colors">
+                      <td className="px-card-padding py-4">
+                        <span className="bg-primary-container/10 text-primary px-2 py-1 rounded text-label-sm font-bold">
+                          {p.invoice_number || `#${p.id?.slice(0, 6)}`}
+                        </span>
+                      </td>
+                      <td className="px-card-padding py-4 font-bold text-on-surface">{p.amount?.toLocaleString()} ر.س</td>
+                      <td className="px-card-padding py-4 text-on-surface-variant">{p.vat_amount?.toLocaleString()} ر.س</td>
+                      <td className="px-card-padding py-4 font-bold text-primary">{p.total_amount?.toLocaleString()} ر.س</td>
+                      <td className="px-card-padding py-4 text-on-surface-variant">
+                        {p.due_date ? new Date(p.due_date).toLocaleDateString('ar-SA') : '-'}
+                      </td>
+                      <td className="px-card-padding py-4">
+                        <span className={`px-3 py-1 rounded-full text-label-sm font-medium ${statusColor[p.status] || 'bg-surface-container text-on-surface-variant'}`}>
+                          {statusLabel[p.status] || p.status}
+                        </span>
+                      </td>
+                      <td className="px-card-padding py-4 text-on-surface-variant">{p.payment_method || '-'}</td>
+                      <td className="px-card-padding py-4">
+                        {p.status === 'paid' && p.contract && (
+                          <ReceiptVoucherPDF payment={p} />
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredPayments.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="px-card-padding py-8 text-center text-on-surface-variant">
+                        لا توجد دفعات مسجلة
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="px-card-padding py-4 border-t border-outline-variant flex items-center justify-between">
+              <p className="font-label-sm text-label-sm text-on-surface-variant">
+                عرض {filteredPayments.length} من أصل {payments.length} دفعة
+              </p>
+            </div>
           </div>
-          <div className="px-card-padding py-4 border-t border-outline-variant flex items-center justify-between">
+
+          <div className="block md:hidden space-y-3">
+          {filteredPayments.map((p) => (
+            <div key={p.id} className="bg-white rounded-xl border border-outline-variant p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="bg-primary-container/10 text-primary px-2 py-1 rounded text-label-sm font-bold">
+                  {p.invoice_number || `#${p.id?.slice(0, 6)}`}
+                </span>
+                <span className={`px-3 py-1 rounded-full text-label-sm font-medium ${statusColor[p.status] || 'bg-surface-container text-on-surface-variant'}`}>
+                  {statusLabel[p.status] || p.status}
+                </span>
+              </div>
+              <div className="space-y-1.5 text-body-sm">
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">المبلغ:</span>
+                  <span>{p.amount?.toLocaleString()} ر.س</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">الضريبة:</span>
+                  <span className={p.vat_amount > 0 ? '' : 'text-on-surface-variant'}>{p.vat_amount?.toLocaleString()} ر.س</span>
+                </div>
+                <div className="flex justify-between font-bold text-primary">
+                  <span>المجموع:</span>
+                  <span>{p.total_amount?.toLocaleString()} ر.س</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">استحقاق:</span>
+                  <span>{p.due_date ? new Date(p.due_date).toLocaleDateString('ar-SA') : '-'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">الطريقة:</span>
+                  <span>{p.payment_method || '-'}</span>
+                </div>
+              </div>
+              {p.status === 'paid' && p.contract && (
+                <div className="mt-3 pt-3 border-t border-outline-variant flex justify-center">
+                  <ReceiptVoucherPDF payment={p} />
+                </div>
+              )}
+            </div>
+          ))}
+          {filteredPayments.length === 0 && (
+            <div className="bg-white rounded-xl border border-outline-variant p-8 text-center">
+              <p className="text-on-surface-variant">لا توجد دفعات مسجلة</p>
+            </div>
+          )}
+          <div className="p-3 text-center">
             <p className="font-label-sm text-label-sm text-on-surface-variant">
               عرض {filteredPayments.length} من أصل {payments.length} دفعة
             </p>
           </div>
         </div>
-      )}
+      </>)}
 
       <AddEditPayment
         paymentId={selectedPayment?.id}

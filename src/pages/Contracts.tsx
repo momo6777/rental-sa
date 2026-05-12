@@ -134,8 +134,8 @@ const ContractsPage = () => {
           <span className="material-symbols-outlined text-5xl text-outline-variant mb-4">description</span>
           <p className="text-on-surface-variant">لا توجد عقود مطابقة</p>
         </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-outline-variant overflow-hidden">
+      ) : (<>
+        <div className="hidden md:block bg-white rounded-xl border border-outline-variant overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-right">
               <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
@@ -197,7 +197,41 @@ const ContractsPage = () => {
             <p className="text-body-sm text-on-surface-variant">عرض {filteredContracts.length} من أصل {contracts.length} عقد</p>
           </div>
         </div>
-      )}
+
+        <div className="block md:hidden space-y-3">
+          {filteredContracts.map((c) => (
+            <div key={c.id} className="bg-white rounded-xl border border-outline-variant p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="bg-primary-container/10 text-primary px-3 py-1 rounded-lg text-label-sm font-bold">
+                  {c.id?.slice(0, 8)}...
+                </span>
+                <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusColor[c.status] || 'bg-surface-container text-on-surface-variant'}`}>
+                  {statusLabel[c.status] || c.status}
+                </span>
+              </div>
+              <div className="space-y-1.5 text-body-sm">
+                <p><span className="text-on-surface-variant">المستأجر: </span>{c.tenant?.full_name_ar || '-'}</p>
+                <p><span className="text-on-surface-variant">الوحدة: </span>{c.unit?.property?.name_ar ? `${c.unit.property.name_ar} - وحدة ${c.unit.unit_number || ''}` : c.unit_id?.slice(0, 8) || '-'}</p>
+                <p><span className="text-on-surface-variant">دورية: </span>{freqLabel[c.payment_frequency] || c.payment_frequency}</p>
+                <p className="font-bold text-primary">{c.rent_amount?.toLocaleString()} ر.س</p>
+              </div>
+              <div className="flex gap-2 mt-3 pt-3 border-t border-outline-variant">
+                <button onClick={() => setPreviewContract(c)} className="flex-1 py-2 rounded-lg border border-outline-variant text-label-sm font-bold hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+                  <span className="material-symbols-outlined text-[16px]">print</span> طباعة
+                </button>
+                {user?.role === 'admin' && (
+                  <button onClick={() => handleEditContract(c)} className="flex-1 py-2 rounded-lg border border-outline-variant text-label-sm font-bold hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+                    <span className="material-symbols-outlined text-[16px]">edit</span> تعديل
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+          <div className="p-3 text-center">
+            <p className="text-body-sm text-on-surface-variant">عرض {filteredContracts.length} من أصل {contracts.length} عقد</p>
+          </div>
+        </div>
+      </>)}
 
       <AddEditContract
         contractId={selectedContract?.id}
