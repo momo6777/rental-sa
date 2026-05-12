@@ -24,15 +24,18 @@ export const NotificationBell = () => {
   const content = (
     <div className={styles.popover}>
       <div className={styles.header}>
-        <Text strong style={{ color: '#fff' }}>الإشعارات</Text>
+        <span className="font-bold text-on-surface text-body-md">الإشعارات</span>
         {unreadCount > 0 && (
-          <Button type="link" size="small" onClick={markAllAsRead} style={{ color: '#ffd700' }}>
+          <Button type="link" size="small" onClick={markAllAsRead} className="text-label-sm font-bold !text-primary p-0">
             تحديد الكل مقروء
           </Button>
         )}
       </div>
       {notifications.length === 0 ? (
-        <Empty description="لا توجد إشعارات" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        <div className="py-10 text-center text-on-surface-variant text-body-sm">
+          <span className="material-symbols-outlined text-3xl block mb-2 text-outline-variant">notifications_off</span>
+          لا توجد إشعارات
+        </div>
       ) : (
         <List
           dataSource={notifications.slice(0, 10)}
@@ -43,18 +46,17 @@ export const NotificationBell = () => {
             >
               <List.Item.Meta
                 title={
-                  <Space>
-                    <Text className={styles.notifTitle}>{n.title}</Text>
+                  <div className="flex items-center gap-2">
+                    <span className={styles.notifTitle}>{n.title}</span>
                     {!n.is_read && <span className={styles.dot} />}
-                  </Space>
+                  </div>
                 }
                 description={
                   <div>
-                    <Text className={styles.notifMessage}>{n.message}</Text>
-                    <br />
-                    <Text className={styles.notifTime}>
+                    <div className={styles.notifMessage}>{n.message}</div>
+                    <div className={styles.notifTime}>
                       {new Date(n.created_at).toLocaleDateString('ar-SA')}
-                    </Text>
+                    </div>
                   </div>
                 }
               />
