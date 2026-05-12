@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Modal, Form, Input, Select, Upload, message } from 'antd';
+import { Modal, Form, Input, Select, Upload, DatePicker, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import { PaymentVoucherPDF, PaymentVoucherData } from '../components/PaymentVoucherPDF';
+import dayjs from 'dayjs';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -54,6 +56,10 @@ const MaintenancePage = () => {
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
   const [uploading, setUploading] = useState(false);
+  const [payModalVisible, setPayModalVisible] = useState(false);
+  const [payRequest, setPayRequest] = useState<any>(null);
+  const [voucherData, setVoucherData] = useState<PaymentVoucherData | null>(null);
+  const [payForm] = Form.useForm();
 
   useEffect(() => {
     fetchRequests();
@@ -180,6 +186,34 @@ const MaintenancePage = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handlePayOpen = (record: any) => {
+    setPayRequest(record);
+    setVoucherData(null);
+    payForm.resetFields();
+    payForm.setFieldsValue({
+      payment_date: dayjs(),
+      payment_method: 'cash',
+      reference_number: `PV-${Date.now().toString(36).toUpperCase()}`,
+    });
+    setPayModalVisible(true);
+  };
+
+  const handlePayGenerate = (values: any) => {
+    if (!payRequest) return;
+    setVoucherData({
+      requestId: payRequest.id,
+      title: payRequest.title,
+      description: payRequest.description,
+      cost: payRequest.cost || 0,
+      unitNumber: payRequest.unit?.unit_number,
+      propertyName: payRequest.unit?.property?.name_ar,
+      payeeName: values.payee_name,
+      paymentMethod: values.payment_method,
+      paymentDate: values.payment_date?.format('YYYY-MM-DD') || new Date().toISOString(),
+      referenceNumber: values.reference_number,
+    });
   };
 
   const handleUploadImage = async (file: File) => {
@@ -339,6 +373,15 @@ const MaintenancePage = () => {
                           >
                             <span className="material-symbols-outlined text-[20px]">delete</span>
                           </button>
+                          {r.status === 'completed' && r.cost > 0 && (
+                            <button
+                              onClick={() => handlePayOpen(r)}
+                              className="p-2 text-on-surface-variant hover:text-secondary transition-colors"
+                              title="سند صرف"
+                            >
+                              <span className="material-symbols-outlined text-[20px]">payments</span>
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>
@@ -352,6 +395,70 @@ const MaintenancePage = () => {
           </div>
         </div>
       )}
+
+      {/* Pay Modal */}
+      <Modal
+        title="سند صرف - صيانة"
+        open={payModalVisible}
+        onCancel={() => { setPayModalVisible(false); setVoucherData(null); }}
+        footer={null}
+        width={520}
+        style={{ top: 40 }}
+      >
+        {!voucherData ? (
+          <Form form={payForm} layout="vertical" onFinish={handlePayGenerate}>
+            <Form.Item name="payee_name" label="اسم المستفيد" rules={[{ required: true, message: 'أدخل اسم المستفيد' }]}>
+              <Input placeholder="اسم المقاول أو المورد" style={{ borderRadius: 8 }} />
+            </Form.Item>
+            <Form.Item name="payment_method" label="طريقة الدفع" rules={[{ required: true, message: 'اختر طريقة الدفع' }]}>
+              <Select style={{ borderRadius: 8 }}>
+                <Option value="cash">نقود</Option>
+                <Option value="transfer">تحويل بنكي</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item name="payment_date" label="تاريخ الدفع" rules={[{ required: true, message: 'اختر التاريخ' }]}>
+              <DatePicker style={{ width: '100%', borderRadius: 8 }} />
+            </Form.Item>
+            <Form.Item name="reference_number" label="رقم السند">
+              <Input placeholder="رقم السند" style={{ borderRadius: 8 }} />
+            </Form.Item>
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => { setPayModalVisible(false); setVoucherData(null); }}
+                className="px-4 py-2 rounded-xl font-label-md border border-outline-variant hover:bg-surface-container transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                type="submit"
+                className="bg-secondary text-on-secondary px-4 py-2 rounded-xl font-label-md hover:opacity-90 transition-colors"
+              >
+                إنشاء سند الصرف
+              </button>
+            </div>
+          </Form>
+        ) : (
+          <div className="space-y-4">
+            <div className="bg-secondary/5 p-4 rounded-xl border border-secondary/20">
+              <p className="font-label-md text-secondary mb-1">تم إنشاء سند الصرف</p>
+              <p className="text-body-sm text-on-surface-variant">
+                مستفيد: {voucherData.payeeName} | المبلغ: {voucherData.cost.toLocaleString()} ر.س
+              </p>
+            </div>
+            <div className="flex justify-center">
+              <PaymentVoucherPDF data={voucherData} />
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={() => { setPayModalVisible(false); setVoucherData(null); }}
+                className="px-4 py-2 rounded-xl font-label-md border border-outline-variant hover:bg-surface-container transition-colors"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* Add/Edit Modal */}
       <Modal

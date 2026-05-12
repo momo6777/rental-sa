@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import AddEditPayment from './AddEditPayment';
+import { ReceiptVoucherPDF } from '../components/ReceiptVoucherPDF';
 
 const PaymentsPage = () => {
   const { user } = useAuth();
@@ -27,7 +28,7 @@ const PaymentsPage = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('payments')
-        .select('*')
+        .select('*, contract:contracts(*, tenant:tenants(*), unit:units(*, property:properties(*)))')
         .order('created_at', { ascending: false });
       if (error) throw error;
       setPayments(data || []);
@@ -186,6 +187,7 @@ const PaymentsPage = () => {
                   <th className="px-card-padding py-4 font-semibold">تاريخ الاستحقاق</th>
                   <th className="px-card-padding py-4 font-semibold">حالة الدفع</th>
                   <th className="px-card-padding py-4 font-semibold">الطريقة</th>
+                  <th className="px-card-padding py-4 font-semibold">إجراءات</th>
                 </tr>
               </thead>
               <tbody className="font-body-md text-body-md divide-y divide-outline-variant">
@@ -208,11 +210,16 @@ const PaymentsPage = () => {
                       </span>
                     </td>
                     <td className="px-card-padding py-4 text-on-surface-variant">{p.payment_method || '-'}</td>
+                    <td className="px-card-padding py-4">
+                      {p.status === 'paid' && p.contract && (
+                        <ReceiptVoucherPDF payment={p} />
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {filteredPayments.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-card-padding py-8 text-center text-on-surface-variant">
+                    <td colSpan={8} className="px-card-padding py-8 text-center text-on-surface-variant">
                       لا توجد دفعات مسجلة
                     </td>
                   </tr>
