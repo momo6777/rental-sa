@@ -166,6 +166,7 @@ const MaintenancePage = () => {
         reported_by: user?.full_name || user?.email || 'system',
       };
 
+      if (values.cost) payload.cost = Number(values.cost);
       if (values.image_url) payload.image_url = values.image_url;
 
       if (editingRequest) {
