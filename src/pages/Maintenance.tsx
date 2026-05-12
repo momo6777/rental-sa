@@ -373,7 +373,7 @@ const MaintenancePage = () => {
                           >
                             <span className="material-symbols-outlined text-[20px]">delete</span>
                           </button>
-                          {r.status === 'completed' && r.cost > 0 && (
+                          {r.status === 'completed' && (
                             <button
                               onClick={() => handlePayOpen(r)}
                               className="p-2 text-on-surface-variant hover:text-secondary transition-colors"
