@@ -59,8 +59,8 @@ const LayoutComponent = () => {
       <aside className="hidden md:flex flex-col h-screen w-64 border-l border-outline-variant bg-surface-container sticky right-0 top-0 z-40">
         <div className="p-container-margin">
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-lg font-bold overflow-hidden">
-              {logoUrl ? <img src={logoUrl} alt="شعار" className="w-full h-full object-contain" /> : 'ع'}
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold overflow-hidden">
+              {logoUrl ? <img src={logoUrl} alt="شعار" className="w-full h-full object-contain" /> : <span className="text-primary">ع</span>}
             </div>
             <div>
               <h1 className="font-headline-md text-headline-md font-bold text-primary">إدارة العقارات</h1>
@@ -106,8 +106,8 @@ const LayoutComponent = () => {
             <div className="p-container-margin">
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-lg font-bold overflow-hidden shrink-0">
-                    {logoUrl ? <img src={logoUrl} alt="شعار" className="w-full h-full object-contain" /> : 'ع'}
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold overflow-hidden shrink-0">
+                    {logoUrl ? <img src={logoUrl} alt="شعار" className="w-full h-full object-contain" /> : <span className="text-primary">ع</span>}
                   </div>
                   <div>
                     <h1 className="font-headline-md text-headline-md font-bold text-primary">إدارة العقارات</h1>
