@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Modal } from 'antd';
 import { useAuth } from '../hooks/useAuth';
 import { getCompanySettings } from '../lib/companySettings';
+import { NotificationBell } from './NotificationBell';
 
 const navItems = [
   { key: '/dashboard', label: 'لوحة التحكم', icon: 'dashboard' },
@@ -174,11 +176,20 @@ const LayoutComponent = () => {
             </form>
           </div>
           <div className="flex items-center gap-4">
-            <button className="p-2 rounded-full hover:bg-surface-container-highest transition-colors relative text-on-surface-variant">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
-            </button>
-            <button className="p-2 rounded-full hover:bg-surface-container-highest transition-colors text-on-surface-variant">
+            <NotificationBell />
+            <button
+              onClick={() => Modal.info({
+                title: 'مساعدة',
+                content: (
+                  <div>
+                    <p>مرحباً بك في نظام إدارة العقارات</p>
+                    <p style={{ marginTop: 12 }}>للحصول على المساعدة، يرجى التواصل مع فريق الدعم الفني.</p>
+                  </div>
+                ),
+                okText: 'حسناً',
+              })}
+              className="p-2 rounded-full hover:bg-surface-container-highest transition-colors text-on-surface-variant"
+            >
               <span className="material-symbols-outlined">help_outline</span>
             </button>
             <div className="h-8 w-px bg-outline-variant mx-1"></div>
