@@ -103,6 +103,9 @@ const AddEditContract: React.FC<AddEditContractProps> = ({ contractId, onClose, 
       if (values.end_date) {
         values.end_date = values.end_date.format('YYYY-MM-DD');
       }
+      if (!values.ejar_contract_number) {
+        values.ejar_contract_number = null;
+      }
 
       let oldUnitId: string | null = null;
       let oldStatus: string | null = null;
