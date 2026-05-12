@@ -312,11 +312,12 @@ const DashboardPage = () => {
           ) : (
             <div className="h-64 flex items-end justify-between gap-2 px-2 pt-4 border-b border-outline-variant/30">
               {visibleRevenue.map((item, i) => {
-                const height = Math.max((item.revenue / maxRevenue) * 100, 3);
+                const maxPx = 200;
+                const hPx = Math.max(Math.round((item.revenue / maxRevenue) * maxPx), 2);
                 const isMax = item.revenue >= maxRevenue && item.revenue > 0;
                 return (
                   <div key={i} className="flex flex-col items-center gap-1.5 flex-1 min-w-0 group relative">
-                    <div className="relative w-full flex flex-col items-center">
+                    <div className="relative w-full flex flex-col items-center justify-end" style={{ height: `${maxPx}px` }}>
                       <span className="text-[10px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity font-label-sm whitespace-nowrap absolute -top-6 bg-surface-container-highest px-2 py-0.5 rounded">
                         {item.revenue.toLocaleString()} ر.س
                       </span>
@@ -326,7 +327,7 @@ const DashboardPage = () => {
                             ? 'bg-primary'
                             : 'bg-primary/20 group-hover:bg-primary/40'
                         }`}
-                        style={{ height: `${height}%`, minHeight: '4px' }}
+                        style={{ height: `${hPx}px`, minHeight: '4px' }}
                       ></div>
                     </div>
                     <span className={`text-[10px] whitespace-nowrap ${
