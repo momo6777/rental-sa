@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
 import { Button } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { getCompanySettings, CompanySettings } from '../lib/companySettings';
@@ -22,12 +22,25 @@ const styles = StyleSheet.create({
     fontFamily: 'Amiri',
     direction: 'rtl',
   },
+  logo: {
+    width: 60,
+    height: 60,
+    objectFit: 'contain',
+  },
   header: {
     marginBottom: 16,
     borderBottomWidth: 2,
     borderBottomColor: '#b71c1c',
     borderBottomStyle: 'solid',
     paddingBottom: 10,
+  },
+  headerRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerTextCol: {
+    flex: 1,
   },
   title: {
     fontSize: 22,
@@ -187,8 +200,15 @@ export const PaymentVoucherPDF: React.FC<Props> = ({ data }) => {
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.title}>سند صرف</Text>
-          <Text style={styles.subtitle}>{data.referenceNumber || '-'}</Text>
+          <View style={styles.headerRow}>
+            {settings.logo_url && (
+              <Image src={settings.logo_url} style={styles.logo} />
+            )}
+            <View style={styles.headerTextCol}>
+              <Text style={styles.title}>سند صرف</Text>
+              <Text style={styles.subtitle}>{data.referenceNumber || '-'}</Text>
+            </View>
+          </View>
           <View style={styles.metadataRow}>
             <Text style={styles.metadataItem}>التاريخ: {formatDate(data.paymentDate)}</Text>
             <Text style={styles.metadataItem}>رقم السند: {data.referenceNumber || data.requestId?.slice(0, 8)}</Text>

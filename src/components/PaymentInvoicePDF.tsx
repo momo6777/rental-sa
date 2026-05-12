@@ -23,12 +23,25 @@ const styles = StyleSheet.create({
     fontFamily: 'Amiri',
     direction: 'rtl',
   },
+  logo: {
+    width: 60,
+    height: 60,
+    objectFit: 'contain',
+  },
   header: {
     marginBottom: 16,
     borderBottomWidth: 2,
     borderBottomColor: '#1a237e',
     borderBottomStyle: 'solid',
     paddingBottom: 10,
+  },
+  headerRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerTextCol: {
+    flex: 1,
   },
   title: {
     fontSize: 22,
@@ -213,8 +226,15 @@ export const PaymentInvoicePDF: React.FC<Props> = ({ payment }) => {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>فاتورة ضريبية</Text>
-          <Text style={styles.invoiceNumberText}>{payment.invoice_number || '-'}</Text>
+          <View style={styles.headerRow}>
+            {settings.logo_url && (
+              <Image src={settings.logo_url} style={styles.logo} />
+            )}
+            <View style={styles.headerTextCol}>
+              <Text style={styles.title}>فاتورة ضريبية</Text>
+              <Text style={styles.invoiceNumberText}>{payment.invoice_number || '-'}</Text>
+            </View>
+          </View>
           <View style={styles.metadataRow}>
             <Text style={styles.metadataItem}>تاريخ الفاتورة: {formatDate(payment.created_at)}</Text>
             <Text style={styles.metadataItem}>تاريخ الاستحقاق: {formatDate(payment.due_date)}</Text>

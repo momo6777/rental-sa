@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { getCompanySettings } from '../lib/companySettings';
 
 const navItems = [
   { key: '/dashboard', label: 'لوحة التحكم', icon: 'dashboard' },
@@ -20,6 +21,11 @@ const LayoutComponent = () => {
   const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    getCompanySettings().then((s) => setLogoUrl(s.logo_url || null));
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -49,8 +55,8 @@ const LayoutComponent = () => {
       <aside className="hidden md:flex flex-col h-screen w-64 border-l border-outline-variant bg-surface-container sticky right-0 top-0 z-40">
         <div className="p-container-margin">
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-lg font-bold">
-              ع
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-lg font-bold overflow-hidden">
+              {logoUrl ? <img src={logoUrl} alt="شعار" className="w-full h-full object-contain" /> : 'ع'}
             </div>
             <div>
               <h1 className="font-headline-md text-headline-md font-bold text-primary">إدارة العقارات</h1>
@@ -96,7 +102,9 @@ const LayoutComponent = () => {
             <div className="p-container-margin">
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-lg font-bold">ع</div>
+                  <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-lg font-bold overflow-hidden shrink-0">
+                    {logoUrl ? <img src={logoUrl} alt="شعار" className="w-full h-full object-contain" /> : 'ع'}
+                  </div>
                   <div>
                     <h1 className="font-headline-md text-headline-md font-bold text-primary">إدارة العقارات</h1>
                     <p className="text-label-sm text-on-surface-variant">نظام إدارة متكامل</p>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Form, Input, InputNumber, Button, message, Spin, Modal, Select } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Form, Input, InputNumber, Button, message, Spin, Modal, Select, Upload } from 'antd';
+import { PlusOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { getCompanySettings, clearSettingsCache, CompanySettings } from '../lib/companySettings';
@@ -15,6 +15,8 @@ const SettingsPage = () => {
   const [addUserModal, setAddUserModal] = useState(false);
   const [addUserForm] = Form.useForm();
   const [addUserLoading, setAddUserLoading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
 
   const isAdmin = user?.role === 'admin';
 
@@ -36,6 +38,7 @@ const SettingsPage = () => {
         vat_rate: s.vat_rate * 100,
         notification_days_before_expiry: s.notification_days_before_expiry,
       });
+      setLogoUrl(s.logo_url || null);
 
       const { data: profilesData } = await supabase
         .from('profiles')
@@ -81,6 +84,58 @@ const SettingsPage = () => {
       message.error(err.message || 'فشل حفظ الإعدادات');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogoUpload = async (file: File) => {
+    try {
+      setLogoUploading(true);
+      const ext = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('logos').upload(fileName, file);
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage.from('logos').getPublicUrl(fileName);
+      const publicUrl = urlData.publicUrl;
+
+      const { data: existing } = await supabase
+        .from('company_settings')
+        .select('id')
+        .limit(1)
+        .single();
+
+      if (existing) {
+        await supabase.from('company_settings').update({ logo_url: publicUrl }).eq('id', existing.id);
+      }
+
+      clearSettingsCache();
+      setLogoUrl(publicUrl);
+      message.success('تم رفع الشعار');
+    } catch (err: any) {
+      message.error(err.message || 'فشل رفع الشعار');
+    } finally {
+      setLogoUploading(false);
+    }
+    return false;
+  };
+
+  const handleRemoveLogo = async () => {
+    try {
+      const { data: existing } = await supabase
+        .from('company_settings')
+        .select('id')
+        .limit(1)
+        .single();
+
+      if (existing) {
+        await supabase.from('company_settings').update({ logo_url: null }).eq('id', existing.id);
+      }
+
+      clearSettingsCache();
+      setLogoUrl(null);
+      message.success('تم إزالة الشعار');
+    } catch (err: any) {
+      message.error(err.message || 'فشل إزالة الشعار');
     }
   };
 
@@ -186,6 +241,42 @@ const SettingsPage = () => {
               <Form.Item label="عنوان الشركة" name="company_address">
                 <Input placeholder="الرياض، المملكة العربية السعودية" className="rounded-lg" />
               </Form.Item>
+            </div>
+            {/* Logo upload */}
+            <div className="mt-4 mb-4">
+              <label className="text-label-sm font-medium text-on-surface mb-2 block">شعار الشركة</label>
+              <div className="flex items-center gap-4">
+                {logoUrl ? (
+                  <div className="relative">
+                    <img src={logoUrl} alt="شعار الشركة" className="h-16 w-auto rounded-lg border border-outline-variant object-contain" />
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-error text-white rounded-full flex items-center justify-center text-xs hover:bg-error/80 transition-colors"
+                    >
+                      x
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 bg-surface-container-highest rounded-lg flex items-center justify-center text-on-surface-variant text-lg border border-outline-variant">
+                    ?
+                  </div>
+                )}
+                <Upload
+                  accept="image/*"
+                  showUploadList={false}
+                  beforeUpload={(file) => { handleLogoUpload(file); return false; }}
+                >
+                  <button
+                    type="button"
+                    disabled={logoUploading}
+                    className="border border-outline-variant rounded-lg px-4 py-2 font-label-md flex items-center gap-2 hover:bg-surface-container-low transition-colors disabled:opacity-50"
+                  >
+                    <UploadOutlined />
+                    {logoUploading ? 'جاري الرفع...' : 'رفع شعار'}
+                  </button>
+                </Upload>
+              </div>
             </div>
             <button
               type="submit"
