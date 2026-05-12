@@ -5,10 +5,14 @@ import { DownloadOutlined } from '@ant-design/icons';
 import { generateInvoiceQRCode } from '../lib/qrCodeGenerator';
 import { getCompanySettings, CompanySettings } from '../lib/companySettings';
 
-Font.register({
-  family: 'Amiri',
-  src: '/fonts/Amiri-Regular.ttf',
-});
+try {
+  Font.register({
+    family: 'Amiri',
+    src: '/fonts/Amiri-Regular.ttf',
+  });
+} catch (e) {
+  console.warn('Amiri font registration failed:', e);
+}
 
 const DEFAULT_SETTINGS: CompanySettings = {
   id: '',
