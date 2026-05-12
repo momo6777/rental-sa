@@ -51,18 +51,21 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     paddingRight: 10,
     marginBottom: 10,
+    textAlign: 'right',
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     marginBottom: 4,
   },
   label: {
     fontSize: 11,
     width: 120,
     color: '#666',
+    textAlign: 'right',
   },
   value: {
     fontSize: 11,
+    textAlign: 'right',
   },
   amountBox: {
     marginTop: 20,
@@ -110,6 +113,7 @@ const styles = StyleSheet.create({
   metadataItem: {
     fontSize: 10,
     color: '#666',
+    textAlign: 'right',
   },
   signature: {
     flexDirection: 'row',
@@ -186,6 +190,10 @@ export const ReceiptVoucherPDF: React.FC<Props> = ({ payment }) => {
           <View style={styles.row}>
             <Text style={styles.label}>العنوان:</Text>
             <Text style={styles.value}>{settings.company_address || '-'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>الرقم الضريبي:</Text>
+            <Text style={styles.value}>{settings.vat_number || '-'}</Text>
           </View>
         </View>
 

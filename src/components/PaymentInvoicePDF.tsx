@@ -52,18 +52,21 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     paddingRight: 10,
     marginBottom: 10,
+    textAlign: 'right',
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     marginBottom: 4,
   },
   label: {
     fontSize: 11,
     width: 120,
     color: '#666',
+    textAlign: 'right',
   },
   value: {
     fontSize: 11,
+    textAlign: 'right',
   },
   table: {
     marginTop: 10,
@@ -72,7 +75,7 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
   },
   tableHeader: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     backgroundColor: '#1a237e',
   },
   tableHeaderCell: {
@@ -84,7 +87,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   tableRow: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
     borderBottomStyle: 'solid',
@@ -98,11 +101,10 @@ const styles = StyleSheet.create({
   },
   summary: {
     marginTop: 20,
-    alignSelf: 'flex-end',
     width: '50%',
   },
   summaryRow: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     paddingTop: 4,
     paddingBottom: 4,
@@ -110,7 +112,7 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   totalRow: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     paddingTop: 8,
     paddingBottom: 8,
@@ -128,7 +130,7 @@ const styles = StyleSheet.create({
   },
   qrSection: {
     marginTop: 20,
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
   },
   qrImage: {
     width: 100,
@@ -155,6 +157,7 @@ const styles = StyleSheet.create({
   metadataItem: {
     fontSize: 10,
     color: '#666',
+    textAlign: 'right',
   },
 });
 
@@ -300,16 +303,16 @@ export const PaymentInvoicePDF: React.FC<Props> = ({ payment }) => {
           <Text style={styles.sectionTitle}>تفاصيل الدفعة</Text>
           <View style={styles.table}>
             <View style={styles.tableHeader}>
-              <Text style={styles.tableHeaderCell}>البيان</Text>
-              <Text style={styles.tableHeaderCell}>المبلغ</Text>
-              <Text style={styles.tableHeaderCell}>VAT</Text>
               <Text style={styles.tableHeaderCell}>الإجمالي</Text>
+              <Text style={styles.tableHeaderCell}>VAT</Text>
+              <Text style={styles.tableHeaderCell}>المبلغ</Text>
+              <Text style={styles.tableHeaderCell}>البيان</Text>
             </View>
             <View style={styles.tableRow}>
-              <Text style={styles.tableCell}>{isCommercial ? 'إيجار تجاري' : 'إيجار سكني'}</Text>
-              <Text style={styles.tableCell}>{payment.amount?.toFixed(2)}</Text>
-              <Text style={styles.tableCell}>{isCommercial ? payment.vat_amount?.toFixed(2) : '0.00'}</Text>
               <Text style={styles.tableCell}>{payment.total_amount?.toFixed(2)}</Text>
+              <Text style={styles.tableCell}>{isCommercial ? payment.vat_amount?.toFixed(2) : '0.00'}</Text>
+              <Text style={styles.tableCell}>{payment.amount?.toFixed(2)}</Text>
+              <Text style={styles.tableCell}>{isCommercial ? 'إيجار تجاري' : 'إيجار سكني'}</Text>
             </View>
           </View>
 
