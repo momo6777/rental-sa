@@ -7,6 +7,15 @@ import { getCompanySettings, CompanySettings } from '../lib/companySettings';
 
 Font.register({ family: 'Amiri', src: '/fonts/Amiri-Regular.ttf' });
 
+const DEFAULT_SETTINGS: CompanySettings = {
+  id: '',
+  company_name_ar: 'شركة عقارات للإدارة والتأجير',
+  vat_number: '310123456700003',
+  company_address: 'الرياض، المملكة العربية السعودية',
+  vat_rate: 0.15,
+  notification_days_before_expiry: 90,
+};
+
 const styles = StyleSheet.create({
   page: {
     padding: 40,
