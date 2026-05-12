@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useSettings } from '../lib/SettingsContext';
 
 interface PaymentWithVAT {
   id: string;
@@ -45,6 +46,7 @@ const ReportsPage = () => {
   const [monthlyVAT, setMonthlyVAT] = useState<MonthlyVATRow[]>([]);
   const [revenueData, setRevenueData] = useState<RevenueRow[]>([]);
   const [occupancyData, setOccupancyData] = useState<OccupancyRow[]>([]);
+  const { formatCurrency, countryConfig } = useSettings();
 
   useEffect(() => {
     loadAll();
@@ -179,7 +181,7 @@ const ReportsPage = () => {
                 <span className="text-label-sm text-on-surface-variant">{stat.label}</span>
               </div>
               <div className={`text-headline-md font-bold ${stat.color}`}>
-                {stat.isCount ? stat.value : `ر.س ${stat.value.toLocaleString()}`}
+                {stat.isCount ? stat.value : formatCurrency(stat.value)}
               </div>
             </div>
           ))}
@@ -195,10 +197,10 @@ const ReportsPage = () => {
               <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
                 <tr>
                   <th className="px-6 py-4 font-bold">الشهر</th>
-                  <th className="px-6 py-4 font-bold">خاضع (ر.س)</th>
-                  <th className="px-6 py-4 font-bold">VAT (ر.س)</th>
-                  <th className="px-6 py-4 font-bold">معفى (ر.س)</th>
-                  <th className="px-6 py-4 font-bold">إجمالي (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">خاضع ({countryConfig.currency.symbol})</th>
+                  <th className="px-6 py-4 font-bold">VAT ({countryConfig.currency.symbol})</th>
+                  <th className="px-6 py-4 font-bold">معفى ({countryConfig.currency.symbol})</th>
+                  <th className="px-6 py-4 font-bold">إجمالي ({countryConfig.currency.symbol})</th>
                   <th className="px-6 py-4 font-bold">فواتير</th>
                 </tr>
               </thead>
@@ -258,8 +260,8 @@ const ReportsPage = () => {
                 <span className={`material-symbols-outlined ${stat.color}`}>{stat.icon}</span>
                 <span className="text-label-sm text-on-surface-variant">{stat.label}</span>
               </div>
-              <div className={`text-headline-md font-bold ${stat.color}`}>
-                ر.س {stat.value.toLocaleString()}
+               <div className={`text-headline-md font-bold ${stat.color}`}>
+                {formatCurrency(stat.value)}
               </div>
             </div>
           ))}
@@ -274,10 +276,10 @@ const ReportsPage = () => {
               <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
                 <tr>
                   <th className="px-6 py-4 font-bold">الشهر</th>
-                  <th className="px-6 py-4 font-bold">محصل (ر.س)</th>
-                  <th className="px-6 py-4 font-bold">متأخر (ر.س)</th>
-                  <th className="px-6 py-4 font-bold">معلق (ر.س)</th>
-                  <th className="px-6 py-4 font-bold">الإجمالي (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">محصل ({countryConfig.currency.symbol})</th>
+                  <th className="px-6 py-4 font-bold">متأخر ({countryConfig.currency.symbol})</th>
+                  <th className="px-6 py-4 font-bold">معلق ({countryConfig.currency.symbol})</th>
+                  <th className="px-6 py-4 font-bold">الإجمالي ({countryConfig.currency.symbol})</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">

@@ -62,8 +62,9 @@ export interface Payment {
   due_date: string;
   paid_date?: string;
   status: 'pending' | 'paid' | 'overdue';
-  payment_method: 'sadad' | 'transfer' | 'cash';
+  payment_method: 'sadad' | 'transfer' | 'cash' | 'fawry';
   sadad_reference?: string;
+  fawry_reference?: string;
   invoice_number?: string;
   created_at: string;
 }

@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import AddEditPayment from './AddEditPayment';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { useSettings } from '../lib/SettingsContext';
 
 const ReceiptVoucherPDF = lazy(() =>
   import('../components/ReceiptVoucherPDF').then((m) => ({ default: m.ReceiptVoucherPDF }))
@@ -18,6 +19,7 @@ const PaymentsPage = () => {
   const [filteredPayments, setFilteredPayments] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
+  const { formatCurrency, countryConfig } = useSettings();
 
   useEffect(() => {
     fetchPayments();
@@ -132,7 +134,7 @@ const PaymentsPage = () => {
           </div>
           <div className="mt-4">
             <p className="font-label-md text-label-md text-on-surface-variant">إجمالي المحصل</p>
-            <h3 className="font-headline-xl text-headline-xl text-secondary mt-1">{totalCollected.toLocaleString()} ر.س</h3>
+            <h3 className="font-headline-xl text-headline-xl text-secondary mt-1">{formatCurrency(totalCollected)}</h3>
           </div>
         </div>
 
@@ -144,7 +146,7 @@ const PaymentsPage = () => {
           </div>
           <div className="mt-4">
             <p className="font-label-md text-label-md text-on-surface-variant">المتبقي (غير محصل)</p>
-            <h3 className="font-headline-xl text-headline-xl text-error mt-1">{totalPending.toLocaleString()} ر.س</h3>
+            <h3 className="font-headline-xl text-headline-xl text-error mt-1">{formatCurrency(totalPending)}</h3>
           </div>
         </div>
 
@@ -202,9 +204,9 @@ const PaymentsPage = () => {
                           {p.invoice_number || `#${p.id?.slice(0, 6)}`}
                         </span>
                       </td>
-                      <td className="px-card-padding py-4 font-bold text-on-surface">{p.amount?.toLocaleString()} ر.س</td>
-                      <td className="px-card-padding py-4 text-on-surface-variant">{p.vat_amount?.toLocaleString()} ر.س</td>
-                      <td className="px-card-padding py-4 font-bold text-primary">{p.total_amount?.toLocaleString()} ر.س</td>
+                      <td className="px-card-padding py-4 font-bold text-on-surface">{formatCurrency(p.amount)}</td>
+                      <td className="px-card-padding py-4 text-on-surface-variant">{formatCurrency(p.vat_amount)}</td>
+                      <td className="px-card-padding py-4 font-bold text-primary">{formatCurrency(p.total_amount)}</td>
                       <td className="px-card-padding py-4 text-on-surface-variant">
                         {p.due_date ? new Date(p.due_date).toLocaleDateString('ar-SA') : '-'}
                       </td>
@@ -256,15 +258,15 @@ const PaymentsPage = () => {
               <div className="space-y-1.5 text-body-sm">
                 <div className="flex justify-between">
                   <span className="text-on-surface-variant">المبلغ:</span>
-                  <span>{p.amount?.toLocaleString()} ر.س</span>
+                  <span>{formatCurrency(p.amount)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-on-surface-variant">الضريبة:</span>
-                  <span className={p.vat_amount > 0 ? '' : 'text-on-surface-variant'}>{p.vat_amount?.toLocaleString()} ر.س</span>
+                  <span className={p.vat_amount > 0 ? '' : 'text-on-surface-variant'}>{formatCurrency(p.vat_amount)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-primary">
                   <span>المجموع:</span>
-                  <span>{p.total_amount?.toLocaleString()} ر.س</span>
+                  <span>{formatCurrency(p.total_amount)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-on-surface-variant">استحقاق:</span>

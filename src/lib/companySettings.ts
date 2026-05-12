@@ -9,6 +9,8 @@ export interface CompanySettings {
   logo_url?: string;
   vat_rate: number;
   notification_days_before_expiry: number;
+  country: 'SA' | 'EG';
+  currency: 'SAR' | 'EGP';
 }
 
 let cachedSettings: CompanySettings | null = null;
@@ -30,6 +32,8 @@ export async function getCompanySettings(): Promise<CompanySettings> {
       company_address: 'الرياض، المملكة العربية السعودية',
       vat_rate: 0.15,
       notification_days_before_expiry: 90,
+      country: 'SA',
+      currency: 'SAR',
     };
   }
 

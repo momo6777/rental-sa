@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { useSettings } from '../lib/SettingsContext';
 
 interface PaidPayment {
   id: string;
@@ -66,6 +67,7 @@ type TabKey = typeof TABS[number]['key'];
 
 const AccountingPage = () => {
   const navigate = useNavigate();
+  const { formatCurrency, countryConfig } = useSettings();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('pl');
   const [plData, setPlData] = useState<PLRow[]>([]);
@@ -275,7 +277,7 @@ const AccountingPage = () => {
               <span className="text-label-sm text-on-surface-variant">إجمالي الإيرادات</span>
             </div>
             <div className="text-headline-md font-bold text-emerald-600">
-              ر.س {plTotals.revenue.toLocaleString()}
+              {formatCurrency(plTotals.revenue)}
             </div>
           </div>
           <div className="bg-white rounded-xl border border-outline-variant p-5 hover:shadow-md transition-shadow">
@@ -284,7 +286,7 @@ const AccountingPage = () => {
               <span className="text-label-sm text-on-surface-variant">إجمالي المصروفات</span>
             </div>
             <div className="text-headline-md font-bold text-red-600">
-              ر.س {plTotals.expenses.toLocaleString()}
+              {formatCurrency(plTotals.expenses)}
             </div>
           </div>
           <div className="bg-white rounded-xl border border-outline-variant p-5 hover:shadow-md transition-shadow">
@@ -293,7 +295,7 @@ const AccountingPage = () => {
               <span className="text-label-sm text-on-surface-variant">صافي الربح / الخسارة</span>
             </div>
             <div className={`text-headline-md font-bold ${plTotals.net >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-              {plTotals.net >= 0 ? '' : '-'}ر.س {Math.abs(plTotals.net).toLocaleString()}
+              {formatCurrency(plTotals.net)}
             </div>
           </div>
         </div>
@@ -307,9 +309,9 @@ const AccountingPage = () => {
               <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
                 <tr>
                   <th className="px-6 py-4 font-bold">الشهر</th>
-                  <th className="px-6 py-4 font-bold">الإيرادات (ر.س)</th>
-                  <th className="px-6 py-4 font-bold">المصروفات (ر.س)</th>
-                  <th className="px-6 py-4 font-bold">الصافي (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">الإيرادات ({countryConfig.currency.symbol})</th>
+                  <th className="px-6 py-4 font-bold">المصروفات ({countryConfig.currency.symbol})</th>
+                  <th className="px-6 py-4 font-bold">الصافي ({countryConfig.currency.symbol})</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
@@ -358,7 +360,7 @@ const AccountingPage = () => {
             <div key={b.label} className={`bg-white rounded-xl border p-5 hover:shadow-md transition-shadow ${b.total > 0 && b.label !== 'مستحقة (غير متأخرة)' ? 'border-red-200' : 'border-outline-variant'}`}>
               <p className="text-label-sm text-on-surface-variant mb-2">{b.label}</p>
               <p className={`text-headline-md font-bold ${b.label === 'مستحقة (غير متأخرة)' ? 'text-amber-600' : 'text-red-600'}`}>
-                ر.س {b.total.toLocaleString()}
+                {formatCurrency(b.total)}
               </p>
               <p className="text-label-sm text-on-surface-variant mt-1">{b.payments.length} فاتورة</p>
             </div>
@@ -375,7 +377,7 @@ const AccountingPage = () => {
                 <tr>
                   <th className="px-6 py-4 font-bold">المستأجر</th>
                   <th className="px-6 py-4 font-bold">رقم الجوال</th>
-                  <th className="px-6 py-4 font-bold">المبلغ (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">المبلغ ({countryConfig.currency.symbol})</th>
                   <th className="px-6 py-4 font-bold">تاريخ الاستحقاق</th>
                   <th className="px-6 py-4 font-bold">الحالة</th>
                   <th className="px-6 py-4 font-bold">التصنيف</th>
@@ -459,7 +461,7 @@ const AccountingPage = () => {
               <span className="text-label-sm text-on-surface-variant">إجمالي التدفق الداخل</span>
             </div>
             <div className="text-headline-md font-bold text-emerald-600">
-              ر.س {cashFlowTotals.inflow.toLocaleString()}
+              {formatCurrency(cashFlowTotals.inflow)}
             </div>
           </div>
           <div className="bg-white rounded-xl border border-outline-variant p-5 hover:shadow-md transition-shadow">
@@ -468,7 +470,7 @@ const AccountingPage = () => {
               <span className="text-label-sm text-on-surface-variant">إجمالي التدفق الخارج</span>
             </div>
             <div className="text-headline-md font-bold text-red-600">
-              ر.س {cashFlowTotals.outflow.toLocaleString()}
+              {formatCurrency(cashFlowTotals.outflow)}
             </div>
           </div>
           <div className="bg-white rounded-xl border border-outline-variant p-5 hover:shadow-md transition-shadow">
@@ -477,7 +479,7 @@ const AccountingPage = () => {
               <span className="text-label-sm text-on-surface-variant">صافي الرصيد النقدي</span>
             </div>
             <div className={`text-headline-md font-bold ${cashFlowTotals.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-              ر.س {cashFlowTotals.balance.toLocaleString()}
+              {formatCurrency(cashFlowTotals.balance)}
             </div>
           </div>
         </div>
@@ -491,9 +493,9 @@ const AccountingPage = () => {
               <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
                 <tr>
                   <th className="px-6 py-4 font-bold">الشهر</th>
-                  <th className="px-6 py-4 font-bold">التدفق الداخل (ر.س)</th>
-                  <th className="px-6 py-4 font-bold">التدفق الخارج (ر.س)</th>
-                  <th className="px-6 py-4 font-bold">الصافي (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">التدفق الداخل ({countryConfig.currency.symbol})</th>
+                  <th className="px-6 py-4 font-bold">التدفق الخارج ({countryConfig.currency.symbol})</th>
+                  <th className="px-6 py-4 font-bold">الصافي ({countryConfig.currency.symbol})</th>
                   <th className="px-6 py-4 font-bold">الرصيد التراكمي</th>
                 </tr>
               </thead>

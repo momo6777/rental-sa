@@ -3,6 +3,7 @@ import { Document, Page, Text, View, Image, StyleSheet, PDFDownloadLink, Font } 
 import { Button } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { getCompanySettings, CompanySettings } from '../lib/companySettings';
+import { getCountryConfig } from '../lib/countryConfig';
 
 Font.register({ family: 'Amiri', src: '/fonts/Amiri-Regular.ttf' });
 
@@ -185,6 +186,8 @@ export const PaymentVoucherPDF: React.FC<Props> = ({ data }) => {
     return () => { cancelled = true; };
   }, []);
 
+  const cc = settings ? getCountryConfig(settings.country || 'SA') : getCountryConfig('SA');
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('ar-SA');
@@ -194,7 +197,7 @@ export const PaymentVoucherPDF: React.FC<Props> = ({ data }) => {
     ? data.expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
     : data.cost;
 
-  const amountWords = numberToArabicWords(Math.floor(totalExpenses)) + ' ريالاً' + (totalExpenses % 1 ? ' و' + Math.round((totalExpenses % 1) * 100) + ' هللة' : '');
+  const amountWords = numberToArabicWords(Math.floor(totalExpenses)) + ' ' + cc.currency.nameArUnit + (totalExpenses % 1 ? ' و' + Math.round((totalExpenses % 1) * 100) + ' ' + cc.currency.nameArSubunit : '');
 
   const DocumentContent = (
     <Document>
@@ -267,19 +270,19 @@ export const PaymentVoucherPDF: React.FC<Props> = ({ data }) => {
             {data.expenses.map((exp, i) => (
               <View key={i} style={styles.row}>
                 <Text style={{ ...styles.label, width: 200 }}>{exp.description}</Text>
-                <Text style={styles.value}>{Number(exp.amount).toFixed(2)} ر.س</Text>
+                <Text style={styles.value}>{Number(exp.amount).toFixed(2)} {cc.currency.symbol}</Text>
               </View>
             ))}
             <View style={{ ...styles.row, marginTop: 8, borderTopWidth: 1, borderTopColor: '#ccc', borderTopStyle: 'solid', paddingTop: 6 }}>
               <Text style={{ ...styles.label, width: 200, fontWeight: 'bold' }}>الإجمالي</Text>
-              <Text style={{ ...styles.value, fontWeight: 'bold' }}>{totalExpenses.toFixed(2)} ر.س</Text>
+              <Text style={{ ...styles.value, fontWeight: 'bold' }}>{totalExpenses.toFixed(2)} {cc.currency.symbol}</Text>
             </View>
           </View>
         )}
 
         <View style={styles.amountBox}>
           <Text style={styles.amountLabel}>المبلغ</Text>
-          <Text style={styles.amountText}>{totalExpenses.toFixed(2)} ر.س</Text>
+          <Text style={styles.amountText}>{totalExpenses.toFixed(2)} {cc.currency.symbol}</Text>
           <Text style={styles.amountWords}>{amountWords}</Text>
         </View>
 

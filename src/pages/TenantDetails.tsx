@@ -1,9 +1,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useSettings } from '../lib/SettingsContext';
 
 const TenantDetails = () => {
   const { id: tenantId } = useParams<{ id: string }>();
+  const { formatCurrency, countryConfig } = useSettings();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const contractNumberByContractId = useMemo(() => {
@@ -176,7 +178,7 @@ const TenantDetails = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-on-surface-variant">{c.unit_id?.slice(0, 8) || '-'}</td>
-                  <td className="px-6 py-4 font-bold text-primary">{c.rent_amount?.toLocaleString()} ر.س</td>
+                  <td className="px-6 py-4 font-bold text-primary">{formatCurrency(c.rent_amount)}</td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusBadge[c.status] || ''}`}>
                       {statusLabel[c.status] || c.status}
@@ -226,7 +228,7 @@ const TenantDetails = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-on-surface-variant">{contractNumberByContractId[p.contract_id] || p.contract_id?.slice(0, 8) || '-'}</td>
-                  <td className="px-6 py-4 font-bold text-primary">{p.total_amount?.toLocaleString()} ر.س</td>
+                  <td className="px-6 py-4 font-bold text-primary">{formatCurrency(p.total_amount)}</td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusBadge[p.status] || ''}`}>
                       {statusLabel[p.status] || p.status}

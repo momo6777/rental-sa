@@ -3,6 +3,7 @@ import { Document, Page, Text, View, Image, StyleSheet, PDFDownloadLink, Font } 
 import { Button } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { getCompanySettings, CompanySettings } from '../lib/companySettings';
+import { getCountryConfig } from '../lib/countryConfig';
 
 Font.register({ family: 'Amiri', src: '/fonts/Amiri-Regular.ttf' });
 
@@ -187,12 +188,14 @@ export const GeneralExpenseVoucherPDF: React.FC<Props> = ({ data }) => {
     return () => { cancelled = true; };
   }, []);
 
+  const cc = settings ? getCountryConfig(settings.country || 'SA') : getCountryConfig('SA');
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('ar-SA');
   };
 
-  const amountWords = numberToArabicWords(Math.floor(data.amount)) + ' ريالاً' + (data.amount % 1 ? ' و' + Math.round((data.amount % 1) * 100) + ' هللة' : '');
+  const amountWords = numberToArabicWords(Math.floor(data.amount)) + ' ' + cc.currency.nameArUnit + (data.amount % 1 ? ' و' + Math.round((data.amount % 1) * 100) + ' ' + cc.currency.nameArSubunit : '');
 
   const categoryLabels: Record<string, string> = {
     'الرواتب والأجور': 'رواتب وأجور',
@@ -268,7 +271,7 @@ export const GeneralExpenseVoucherPDF: React.FC<Props> = ({ data }) => {
 
         <View style={styles.amountBox}>
           <Text style={styles.amountLabel}>المبلغ</Text>
-          <Text style={styles.amountText}>{data.amount.toFixed(2)} ر.س</Text>
+          <Text style={styles.amountText}>{data.amount.toFixed(2)} {cc.currency.symbol}</Text>
           <Text style={styles.amountWords}>{amountWords}</Text>
         </View>
 

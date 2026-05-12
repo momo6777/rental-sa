@@ -4,6 +4,7 @@ import { Button } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { generateInvoiceQRCode } from '../lib/qrCodeGenerator';
 import { getCompanySettings, CompanySettings } from '../lib/companySettings';
+import { getCountryConfig } from '../lib/countryConfig';
 
 Font.register({ family: 'Amiri', src: '/fonts/Amiri-Regular.ttf' });
 
@@ -338,15 +339,15 @@ export const PaymentInvoicePDF: React.FC<Props> = ({ payment }) => {
           <View style={styles.summary}>
             <View style={styles.summaryRow}>
               <Text>المبلغ قبل الضريبة:</Text>
-              <Text>{payment.amount?.toFixed(2)} ر.س</Text>
+              <Text>{payment.amount?.toFixed(2)} {getCountryConfig(settings.country || 'SA').currency.symbol}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text>الضريبة المضافة (15%):</Text>
-              <Text>{isCommercial ? payment.vat_amount?.toFixed(2) : '0.00'} ر.س</Text>
+              <Text>الضريبة المضافة (</Text>
+              <Text>{isCommercial ? payment.vat_amount?.toFixed(2) : '0.00'} {getCountryConfig(settings.country || 'SA').currency.symbol}</Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>المجموع الكلي:</Text>
-              <Text style={styles.totalValue}>{payment.total_amount?.toFixed(2)} ر.س</Text>
+              <Text style={styles.totalValue}>{payment.total_amount?.toFixed(2)} {getCountryConfig(settings.country || 'SA').currency.symbol}</Text>
             </View>
           </View>
         </View>
@@ -360,7 +361,7 @@ export const PaymentInvoicePDF: React.FC<Props> = ({ payment }) => {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text>هذه الفاتورة إلكترونية ومعتمدة وفقاً لمتطلبات هيئة الزكاة والضريبة والجمارك</Text>
+          <Text>هذه الفاتورة إلكترونية ومعتمدة وفقاً لمتطلبات {getCountryConfig(settings.country || 'SA').taxAuthorityAr}</Text>
         </View>
       </Page>
     </Document>

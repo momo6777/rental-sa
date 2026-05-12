@@ -4,9 +4,11 @@ import { PlusOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons'
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { getCompanySettings, clearSettingsCache, CompanySettings } from '../lib/companySettings';
+import { useSettings } from '../lib/SettingsContext';
 
 const SettingsPage = () => {
   const { user } = useAuth();
+  const { refreshSettings: refreshContextSettings } = useSettings();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,6 +39,8 @@ const SettingsPage = () => {
         company_address: s.company_address || '',
         vat_rate: s.vat_rate * 100,
         notification_days_before_expiry: s.notification_days_before_expiry,
+        country: s.country || 'SA',
+        currency: s.currency || 'SAR',
       });
       setLogoUrl(s.logo_url || null);
 
@@ -64,6 +68,8 @@ const SettingsPage = () => {
         company_address: values.company_address || null,
         vat_rate: (values.vat_rate || 15) / 100,
         notification_days_before_expiry: values.notification_days_before_expiry || 90,
+        country: values.country || 'SA',
+        currency: values.currency || 'SAR',
       };
 
       const { data: existing } = await supabase
@@ -79,6 +85,7 @@ const SettingsPage = () => {
       }
 
       clearSettingsCache();
+      await refreshContextSettings();
       message.success('تم حفظ الإعدادات بنجاح');
     } catch (err: any) {
       message.error(err.message || 'فشل حفظ الإعدادات');
@@ -240,6 +247,18 @@ const SettingsPage = () => {
               </Form.Item>
               <Form.Item label="عنوان الشركة" name="company_address">
                 <Input placeholder="الرياض، المملكة العربية السعودية" className="rounded-lg" />
+              </Form.Item>
+              <Form.Item label="الدولة" name="country" rules={[{ required: true, message: 'اختر الدولة' }]}>
+                <Select className="rounded-lg">
+                  <Select.Option value="SA">السعودية</Select.Option>
+                  <Select.Option value="EG">مصر</Select.Option>
+                </Select>
+              </Form.Item>
+              <Form.Item label="العملة" name="currency" rules={[{ required: true, message: 'اختر العملة' }]}>
+                <Select className="rounded-lg">
+                  <Select.Option value="SAR">ريال سعودي (ر.س)</Select.Option>
+                  <Select.Option value="EGP">جنيه مصري (ج.م)</Select.Option>
+                </Select>
               </Form.Item>
             </div>
             {/* Logo upload */}

@@ -1,14 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { getCompanySettings } from '../lib/companySettings';
 
 const LoginPage = () => {
+  const [countryName, setCountryName] = useState('السعودية - الرياض');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  useEffect(() => {
+    getCompanySettings().then(s => {
+      if (s.country === 'EG') setCountryName('مصر - القاهرة');
+      else setCountryName('السعودية - الرياض');
+    }).catch(() => {});
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +68,7 @@ const LoginPage = () => {
           </div>
         </div>
         <div className="absolute bottom-8 z-10">
-          <p className="text-white/30 text-xs">السعودية - الرياض</p>
+          <p className="text-white/30 text-xs">{countryName}</p>
         </div>
       </div>
 

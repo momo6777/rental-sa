@@ -3,6 +3,7 @@ import { Form, Input, InputNumber, Select, DatePicker, Button, message, Modal } 
 import { supabase } from '../lib/supabase';
 import { calcVAT } from '../lib/vatCalculator';
 import { generateInvoiceNumber } from '../lib/invoiceGenerator';
+import { useSettings } from '../lib/SettingsContext';
 import dayjs from 'dayjs';
 
 const { Option } = Select;
@@ -14,6 +15,7 @@ export type AddEditPaymentProps = {
 };
 
 const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, visible }) => {
+  const { settings, countryConfig } = useSettings();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [contracts, setContracts] = useState<Array<{ id: string; ejar_contract_number: string; contract_number: string }>>([]);
@@ -44,7 +46,7 @@ const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, vis
       setIsCommercial(commercial);
       const amount = form.getFieldValue('amount');
       if (amount > 0) {
-        const vatResult = calcVAT(Number(amount), commercial);
+        const vatResult = calcVAT(Number(amount), commercial, settings.vat_rate);
         form.setFieldsValue({
           vat_amount: vatResult.vat,
           total_amount: vatResult.total,
@@ -57,7 +59,7 @@ const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, vis
 
   const handleAmountChange = useCallback((value: number | null) => {
     const amount = value ?? 0;
-    const vatResult = calcVAT(amount, isCommercial);
+    const vatResult = calcVAT(amount, isCommercial, settings.vat_rate);
     form.setFieldsValue({
       vat_amount: vatResult.vat,
       total_amount: vatResult.total,
@@ -182,14 +184,21 @@ const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, vis
         </Form.Item>
         <Form.Item label="طريقة الدفع" name="payment_method" rules={[{ required: true, message: 'اختر طريقة الدفع' }]}>
           <Select>
-            <Option value="cash">نقود</Option>
-            <Option value="transfer">تحويل</Option>
-            <Option value="sadad">سداد</Option>
+            {countryConfig.paymentMethods.map(pm => (
+              <Option key={pm.value} value={pm.value}>{pm.label}</Option>
+            ))}
           </Select>
         </Form.Item>
-        <Form.Item label="مرجع سداد (SADAD)" name="sadad_reference">
-          <Input placeholder="رقم المرجع سداد (إن وجد)" style={{ borderRadius: 8 }} />
-        </Form.Item>
+        {settings.country === 'SA' && (
+          <Form.Item label="مرجع سداد (SADAD)" name="sadad_reference">
+            <Input placeholder="رقم المرجع سداد (إن وجد)" style={{ borderRadius: 8 }} />
+          </Form.Item>
+        )}
+        {settings.country === 'EG' && (
+          <Form.Item label="مرجع فوري" name="fawry_reference">
+            <Input placeholder="رقم مرجع فوري (إن وجد)" style={{ borderRadius: 8 }} />
+          </Form.Item>
+        )}
         <Form.Item label="رقم الفاتورة" name="invoice_number">
           <Input placeholder="الفاتورة (تلقائي للجديد)" style={{ borderRadius: 8 }} />
         </Form.Item>

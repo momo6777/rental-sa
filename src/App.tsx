@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import { useAuth } from './hooks/useAuth';
 import { generateNotifications } from './lib/notificationService';
+import { SettingsProvider } from './lib/SettingsContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -34,25 +35,27 @@ function App() {
     <ConfigProvider direction="rtl">
       <BrowserRouter>
         {user ? (
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Navigate replace to="/dashboard" />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/properties" element={<Properties />} />
-              <Route path="/units" element={<Units />} />
-              <Route path="/tenants/:id" element={<TenantDetails />} />
-              <Route path="/tenants" element={<Tenants />} />
-              <Route path="/contracts" element={<Contracts />} />
-              <Route path="/payments" element={<Payments />} />
-              <Route path="/maintenance" element={<Maintenance />} />
-              <Route path="/accounting" element={<Accounting />} />
-              <Route path="/expenses" element={<Expenses />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/login" element={<Navigate replace to="/dashboard" />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
+          <SettingsProvider>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Navigate replace to="/dashboard" />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/properties" element={<Properties />} />
+                <Route path="/units" element={<Units />} />
+                <Route path="/tenants/:id" element={<TenantDetails />} />
+                <Route path="/tenants" element={<Tenants />} />
+                <Route path="/contracts" element={<Contracts />} />
+                <Route path="/payments" element={<Payments />} />
+                <Route path="/maintenance" element={<Maintenance />} />
+                <Route path="/accounting" element={<Accounting />} />
+                <Route path="/expenses" element={<Expenses />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/login" element={<Navigate replace to="/dashboard" />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </SettingsProvider>
         ) : (
           <>
             <Routes>

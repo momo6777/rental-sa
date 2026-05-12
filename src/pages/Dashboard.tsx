@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { useSettings } from '../lib/SettingsContext';
 
 interface MonthlyRevenue {
   month: string;
@@ -34,6 +35,7 @@ interface MaintenanceItem {
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { formatCurrency, countryConfig } = useSettings();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
@@ -226,7 +228,7 @@ const DashboardPage = () => {
           <h3 className="font-headline-xl text-headline-xl text-primary mt-0.5">
             {stats.collected.toLocaleString()}
           </h3>
-          <p className="text-label-sm text-on-surface-variant mt-1">ريال سعودي</p>
+          <p className="text-label-sm text-on-surface-variant mt-1">{countryConfig.currency.nameAr}</p>
         </div>
 
         {/* Occupancy Rate */}
@@ -262,7 +264,7 @@ const DashboardPage = () => {
           <h3 className="font-headline-xl text-headline-xl text-error mt-0.5">
             {stats.overdue.toLocaleString()}
           </h3>
-          <p className="text-label-sm text-on-surface-variant mt-1">ريال سعودي متأخرة</p>
+          <p className="text-label-sm text-on-surface-variant mt-1">{countryConfig.currency.nameAr + ' متأخرة'}</p>
         </div>
 
         {/* Pending Maintenance */}
@@ -293,7 +295,7 @@ const DashboardPage = () => {
             <div>
               <h4 className="font-headline-md text-headline-md text-on-surface">التحصيل الشهري</h4>
               <p className="text-label-sm text-on-surface-variant mt-0.5">
-                إجمالي <strong>{periodTotal.toLocaleString()} ر.س</strong> خلال {chartMonths} أشهر
+                إجمالي <strong>{formatCurrency(periodTotal)}</strong> خلال {chartMonths} أشهر
               </p>
             </div>
             <select
@@ -319,7 +321,7 @@ const DashboardPage = () => {
                   <div key={i} className="flex flex-col items-center gap-1.5 flex-1 min-w-0 group relative">
                     <div className="relative w-full flex flex-col items-center justify-end" style={{ height: `${maxPx}px` }}>
                       <span className="text-[10px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity font-label-sm whitespace-nowrap absolute -top-6 bg-surface-container-highest px-2 py-0.5 rounded">
-                        {item.revenue.toLocaleString()} ر.س
+                        {formatCurrency(item.revenue)}
                       </span>
                       <div
                         className={`w-full rounded-t-md transition-all duration-300 ${
@@ -436,7 +438,7 @@ const DashboardPage = () => {
                     <p className={`font-label-md font-bold ${
                       p.status === 'overdue' ? 'text-error' : 'text-primary'
                     }`}>
-                      {p.total_amount.toLocaleString()} ر.س
+                      {formatCurrency(p.total_amount)}
                     </p>
                     <span className={`text-[10px] ${p.status === 'overdue' ? 'text-error' : 'text-amber-600'}`}>
                       {p.status === 'overdue' ? 'متأخرة' : 'مستحقة'}
@@ -564,7 +566,7 @@ const DashboardPage = () => {
           <div className="text-white max-w-lg">
             <h3 className="font-headline-lg text-headline-lg mb-2">أداء المحفظة العقارية</h3>
             <p className="font-body-md text-body-md opacity-90">
-              إجمالي الإيرادات <strong>{stats.collected.toLocaleString()} ر.س</strong> بنسبة تحصيل{' '}
+              إجمالي الإيرادات <strong>{formatCurrency(stats.collected)}</strong> بنسبة تحصيل{' '}
               {stats.totalRevenue > 0 ? ((stats.collected / stats.totalRevenue) * 100).toFixed(1) : 0}%
             </p>
           </div>

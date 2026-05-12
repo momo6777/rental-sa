@@ -3,6 +3,7 @@ import { Form, Input, InputNumber, Select, Upload, Button, message, Modal, Check
 import { PlusOutlined, CameraOutlined, FileTextOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import { useSettings } from '../lib/SettingsContext';
 import styles from './AddEditUnit.module.css';
 
 const { Option } = Select;
@@ -17,6 +18,7 @@ type AddEditUnitProps = {
 
 const AddEditUnit = ({ unitId, initialPropertyId, onClose, visible }: AddEditUnitProps) => {
   const { user } = useAuth();
+  const { countryConfig } = useSettings();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [unitData, setUnitData] = useState({
@@ -222,7 +224,7 @@ const AddEditUnit = ({ unitId, initialPropertyId, onClose, visible }: AddEditUni
         </Form.Item>
 
         <Form.Item
-          label="الإيجار الشهري (ر.س)"
+          label={`الإيجار الشهري (${countryConfig.currency.symbol})`}
           name="rent_price"
           rules={[{ required: true, type: 'number', min: 0, message: 'يرجى إدخال الإيجار (رقم أكبر من أو يساوي صفر)' }]}
         >

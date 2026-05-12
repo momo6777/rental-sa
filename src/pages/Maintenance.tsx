@@ -2,6 +2,7 @@ import { useEffect, useState, lazy, Suspense } from 'react';
 import { Modal, Form, Input, Select, Upload, DatePicker, message } from 'antd';
 import { UploadOutlined, PlusOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
+import { useSettings } from '../lib/SettingsContext';
 import { supabase } from '../lib/supabase';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import type { PaymentVoucherData } from '../components/PaymentVoucherPDF';
@@ -48,6 +49,7 @@ const statusLabels: Record<string, string> = {
 
 const MaintenancePage = () => {
   const { user } = useAuth();
+  const { formatCurrency, countryConfig } = useSettings();
   const isAdmin = user?.role === 'admin';
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -404,7 +406,7 @@ const MaintenancePage = () => {
                             onClick={() => toggleExpanded(r.id)}
                             className="text-label-sm text-primary hover:text-primary-container transition-colors mt-1 font-bold"
                           >
-                            {isExpanded ? 'إخفاء المصروفات' : `${exps.length} مصروف (${totalExp.toLocaleString()} ر.س)`}
+{isExpanded ? 'إخفاء المصروفات' : `${exps.length} مصروف (${formatCurrency(totalExp)})`}
                           </button>
                         )}
                       </td>
@@ -429,7 +431,7 @@ const MaintenancePage = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-on-surface-variant">
-                        {totalExp ? `ر.س ${totalExp.toLocaleString()}` : '-'}
+                        {totalExp ? formatCurrency(totalExp) : '-'}
                       </td>
                       <td className="px-6 py-4 text-on-surface-variant">
                         {r.created_at ? new Date(r.created_at).toLocaleDateString('ar-SA') : '-'}
@@ -488,7 +490,7 @@ const MaintenancePage = () => {
                               <div key={e.id} className="flex items-center justify-between text-label-sm">
                                 <span className="text-on-surface">{e.description}</span>
                                 <div className="flex items-center gap-3">
-                                  <span className="text-secondary font-bold">{Number(e.amount).toLocaleString()} ر.س</span>
+                                  <span className="text-secondary font-bold">{formatCurrency(Number(e.amount))}</span>
                                   {isAdmin && (
                                     <button
                                       onClick={() => handleDeleteExpense(e.id)}
@@ -503,7 +505,7 @@ const MaintenancePage = () => {
                             ))}
                             <div className="flex items-center justify-between text-label-sm font-bold border-t border-outline-variant pt-1 mt-1">
                               <span>الإجمالي</span>
-                              <span className="text-secondary">{totalExp.toLocaleString()} ر.س</span>
+                              <span className="text-secondary">{formatCurrency(totalExp)}</span>
                             </div>
                           </div>
                         </td>
@@ -541,7 +543,7 @@ const MaintenancePage = () => {
                 <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusColors[r.status] || ''}`}>
                   {statusLabels[r.status] || r.status}
                 </span>
-                {totalExp ? <span className="text-label-sm text-secondary font-bold">ر.س {totalExp.toLocaleString()}</span> : null}
+                {totalExp ? <span className="text-label-sm text-secondary font-bold">{formatCurrency(totalExp)}</span> : null}
                 <span className="text-label-sm text-on-surface-variant mr-auto">
                   {r.created_at ? new Date(r.created_at).toLocaleDateString('ar-SA') : ''}
                 </span>
@@ -558,7 +560,7 @@ const MaintenancePage = () => {
                     className="text-label-sm text-primary font-bold flex items-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[16px]">{isExpanded ? 'expand_less' : 'expand_more'}</span>
-                    {isExpanded ? 'إخفاء المصروفات' : `${exps.length} مصروف (${totalExp.toLocaleString()} ر.س)`}
+                    {isExpanded ? 'إخفاء المصروفات' : `${exps.length} مصروف (${formatCurrency(totalExp)})`}
                   </button>
                   {isExpanded && (
                     <div className="mt-2 space-y-1 pr-2 border-r-2 border-primary/30">
@@ -566,7 +568,7 @@ const MaintenancePage = () => {
                         <div key={e.id} className="flex items-center justify-between text-label-sm">
                           <span>{e.description}</span>
                           <div className="flex items-center gap-2">
-                            <span className="text-secondary font-bold">{Number(e.amount).toLocaleString()} ر.س</span>
+                            <span className="text-secondary font-bold">{formatCurrency(Number(e.amount))}</span>
                             {isAdmin && (
                               <button onClick={() => handleDeleteExpense(e.id)} className="text-error hover:text-error/70" title="حذف">
                                 <span className="material-symbols-outlined text-[14px]">close</span>
@@ -577,7 +579,7 @@ const MaintenancePage = () => {
                       ))}
                       <div className="flex items-center justify-between text-label-sm font-bold border-t border-outline-variant pt-1 mt-1">
                         <span>الإجمالي</span>
-                        <span className="text-secondary">{totalExp.toLocaleString()} ر.س</span>
+                        <span className="text-secondary">{formatCurrency(totalExp)}</span>
                       </div>
                     </div>
                   )}
@@ -635,12 +637,12 @@ const MaintenancePage = () => {
                       {exps.map((e: any) => (
                         <div key={e.id} className="flex items-center justify-between text-label-sm">
                           <span>{e.description}</span>
-                          <span>{Number(e.amount).toLocaleString()} ر.س</span>
+                          <span>{formatCurrency(Number(e.amount))}</span>
                         </div>
                       ))}
                       <div className="flex items-center justify-between text-label-sm font-bold border-t border-secondary/20 pt-1 mt-1">
                         <span>الإجمالي</span>
-                        <span className="text-secondary">{total.toLocaleString()} ر.س</span>
+                        <span className="text-secondary">{formatCurrency(total)}</span>
                       </div>
                     </>
                   ) : (
@@ -684,7 +686,7 @@ const MaintenancePage = () => {
             <div className="bg-secondary/5 p-4 rounded-xl border border-secondary/20">
               <p className="font-label-md text-secondary mb-1">تم إنشاء سند الصرف</p>
               <p className="text-body-sm text-on-surface-variant">
-                مستفيد: {voucherData.payeeName} | المبلغ: {voucherData.cost.toLocaleString()} ر.س
+                مستفيد: {voucherData.payeeName} | المبلغ: {formatCurrency(voucherData.cost)}
               </p>
             </div>
             <div className="flex justify-center">
@@ -721,7 +723,7 @@ const MaintenancePage = () => {
             <Input placeholder="مثال: شراء قطع الكهرباء" style={{ borderRadius: 8 }} />
           </Form.Item>
           <Form.Item name="amount" label="المبلغ" rules={[{ required: true, message: 'أدخل المبلغ' }]}>
-            <Input type="number" min={0} placeholder="ر.س" style={{ borderRadius: 8 }} />
+            <Input type="number" min={0} placeholder={countryConfig.currency.symbol} style={{ borderRadius: 8 }} />
           </Form.Item>
         </Form>
       </Modal>
@@ -770,7 +772,7 @@ const MaintenancePage = () => {
             </Select>
           </Form.Item>
           <Form.Item name="cost" label="التكلفة (عند الإغلاق)">
-            <Input type="number" min={0} placeholder="ر.س" />
+            <Input type="number" min={0} placeholder={countryConfig.currency.symbol} />
           </Form.Item>
           <Form.Item name="image_url" label="صورة المشكلة">
             <Input placeholder="رابط الصورة" style={{ display: 'none' }} />

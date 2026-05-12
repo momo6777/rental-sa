@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { getCompanySettings } from './companySettings';
+import { currencySymbol, CurrencyCode } from './countryConfig';
 
 export async function generateNotifications() {
   try {
@@ -56,7 +57,7 @@ export async function generateNotifications() {
       newNotifications.push({
         user_id: user.id,
         title: '💳 دفعة متأخرة',
-        message: `دفعة ${p.total_amount} ر.س من ${p.contract?.tenant?.full_name_ar || ''} متأخرة`,
+        message: `دفعة ${p.total_amount} ${currencySymbol((settings.currency || 'SAR') as CurrencyCode)} من ${p.contract?.tenant?.full_name_ar || ''} متأخرة`,
         type: 'payment_overdue',
         related_id: p.id,
       });

@@ -3,6 +3,7 @@ import { Document, Page, Text, View, Image, StyleSheet, PDFDownloadLink, Font } 
 import { Button } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { getCompanySettings, CompanySettings } from '../lib/companySettings';
+import { getCountryConfig } from '../lib/countryConfig';
 
 Font.register({ family: 'Amiri', src: '/fonts/Amiri-Regular.ttf' });
 
@@ -172,13 +173,15 @@ export const ReceiptVoucherPDF: React.FC<Props> = ({ payment }) => {
     return () => { cancelled = true; };
   }, []);
 
+  const cc = settings ? getCountryConfig(settings.country || 'SA') : getCountryConfig('SA');
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString('ar-SA');
   };
 
   const totalAmount = payment.total_amount || 0;
-  const amountWords = numberToArabicWords(Math.floor(totalAmount)) + ' ريالاً' + (totalAmount % 1 ? ' و' + Math.round((totalAmount % 1) * 100) + ' هللة' : '');
+  const amountWords = numberToArabicWords(Math.floor(totalAmount)) + ' ' + cc.currency.nameArUnit + (totalAmount % 1 ? ' و' + Math.round((totalAmount % 1) * 100) + ' ' + cc.currency.nameArSubunit : '');
 
   const DocumentContent = (
     <Document>
@@ -239,7 +242,7 @@ export const ReceiptVoucherPDF: React.FC<Props> = ({ payment }) => {
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>طريقة الدفع:</Text>
-            <Text style={styles.value}>{payment.payment_method === 'cash' ? 'نقود' : payment.payment_method === 'transfer' ? 'تحويل بنكي' : payment.payment_method === 'sadad' ? 'سداد' : payment.payment_method || '-'}</Text>
+            <Text style={styles.value}>{payment.payment_method === 'cash' ? 'نقود' : payment.payment_method === 'transfer' ? 'تحويل بنكي' : payment.payment_method === 'sadad' ? 'سداد' : payment.payment_method === 'fawry' ? 'فوري' : payment.payment_method || '-'}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>تاريخ الدفع:</Text>
@@ -251,11 +254,17 @@ export const ReceiptVoucherPDF: React.FC<Props> = ({ payment }) => {
               <Text style={styles.value}>{payment.sadad_reference}</Text>
             </View>
           )}
+          {payment.fawry_reference && (
+            <View style={styles.row}>
+              <Text style={styles.label}>مرجع فوري:</Text>
+              <Text style={styles.value}>{payment.fawry_reference}</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.amountBox}>
           <Text style={styles.amountLabel}>المبلغ</Text>
-          <Text style={styles.amountText}>{totalAmount.toFixed(2)} ر.س</Text>
+          <Text style={styles.amountText}>{totalAmount.toFixed(2)} {cc.currency.symbol}</Text>
           <Text style={styles.amountWords}>{amountWords}</Text>
         </View>
 

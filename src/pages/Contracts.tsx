@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useSettings } from '../lib/SettingsContext';
 import { supabase } from '../lib/supabase';
 import AddEditContract from './AddEditContract';
 
 const ContractsPage = () => {
   const { user } = useAuth();
+  const { formatCurrency, countryConfig } = useSettings();
   const [searchParams] = useSearchParams();
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,7 +163,7 @@ const ContractsPage = () => {
                     <td className="px-6 py-4 text-on-surface-variant">
                       {c.unit?.property?.name_ar ? `${c.unit.property.name_ar} - وحدة ${c.unit.unit_number || ''}` : c.unit_id?.slice(0, 8) || '-'}
                     </td>
-                    <td className="px-6 py-4 font-bold text-primary">{c.rent_amount?.toLocaleString()} ر.س</td>
+                    <td className="px-6 py-4 font-bold text-primary">{formatCurrency(c.rent_amount)}</td>
                     <td className="px-6 py-4 text-on-surface-variant">{freqLabel[c.payment_frequency] || c.payment_frequency}</td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusColor[c.status] || 'bg-surface-container text-on-surface-variant'}`}>
@@ -213,9 +215,9 @@ const ContractsPage = () => {
                 <p><span className="text-on-surface-variant">المستأجر: </span>{c.tenant?.full_name_ar || '-'}</p>
                 <p><span className="text-on-surface-variant">الوحدة: </span>{c.unit?.property?.name_ar ? `${c.unit.property.name_ar} - وحدة ${c.unit.unit_number || ''}` : c.unit_id?.slice(0, 8) || '-'}</p>
                 <p><span className="text-on-surface-variant">دورية: </span>{freqLabel[c.payment_frequency] || c.payment_frequency}</p>
-                <p className="font-bold text-primary">{c.rent_amount?.toLocaleString()} ر.س</p>
-              </div>
-              <div className="flex gap-2 mt-3 pt-3 border-t border-outline-variant">
+                <p className="font-bold text-primary">{formatCurrency(c.rent_amount)}</p>
+                </div>
+                <div className="flex gap-2 mt-3 pt-3 border-t border-outline-variant">
                 <button onClick={() => setPreviewContract(c)} className="flex-1 py-2 rounded-lg border border-outline-variant text-label-sm font-bold hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
                   <span className="material-symbols-outlined text-[16px]">print</span> طباعة
                 </button>
@@ -339,7 +341,7 @@ const ContractsPage = () => {
                 <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-body-md">
                   <div>
                     <p className="text-label-sm text-on-surface-variant">قيمة الإيجار</p>
-                    <p className="font-bold text-primary text-headline-md">{previewContract.rent_amount?.toLocaleString()} ر.س</p>
+                    <p className="font-bold text-primary text-headline-md">{formatCurrency(previewContract.rent_amount)}</p>
                   </div>
                   <div>
                     <p className="text-label-sm text-on-surface-variant">دورية الدفع</p>
@@ -347,7 +349,7 @@ const ContractsPage = () => {
                   </div>
                   <div>
                     <p className="text-label-sm text-on-surface-variant">مبلغ الضمان</p>
-                    <p className="font-bold">{previewContract.deposit_amount?.toLocaleString()} ر.س</p>
+                    <p className="font-bold">{formatCurrency(previewContract.deposit_amount)}</p>
                   </div>
                   <div>
                     <p className="text-label-sm text-on-surface-variant">شامل الضريبة</p>

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useSettings } from '../lib/SettingsContext';
 import { supabase } from '../lib/supabase';
 import { message } from 'antd';
 import AddEditUnit from './AddEditUnit';
 
 const UnitsPage = () => {
   const { user } = useAuth();
+  const { formatCurrency, countryConfig } = useSettings();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [units, setUnits] = useState<any[]>([]);
@@ -232,7 +234,7 @@ const UnitsPage = () => {
                     </td>
                     <td className="px-6 py-4 text-on-surface-variant">{unit.floor ?? '-'}</td>
                     <td className="px-6 py-4 text-on-surface-variant">{unit.area_sqm ? `${unit.area_sqm} م²` : '-'}</td>
-                    <td className="px-6 py-4 font-bold text-primary">{unit.rent_price?.toLocaleString()} ر.س</td>
+                    <td className="px-6 py-4 font-bold text-primary">{formatCurrency(unit.rent_price)}</td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusBadge[unit.status] || 'bg-surface-container text-on-surface-variant'}`}>
                         {statusLabel[unit.status] || unit.status}
@@ -281,7 +283,7 @@ const UnitsPage = () => {
                 <p><span className="text-on-surface-variant">العقار: </span>{unit.properties?.name_ar || '-'}</p>
                 <p><span className="text-on-surface-variant">النوع: </span>{typeLabel[unit.type] || unit.type}</p>
                 <p><span className="text-on-surface-variant">المساحة: </span>{unit.area_sqm ? `${unit.area_sqm} م²` : '-'}</p>
-                <p className="font-bold text-primary">{unit.rent_price?.toLocaleString()} ر.س</p>
+                <p className="font-bold text-primary">{formatCurrency(unit.rent_price)}</p>
               </div>
               {user?.role === 'admin' && (
                 <div className="flex gap-2 mt-3 pt-3 border-t border-outline-variant">

@@ -4,6 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { useSettings } from '../lib/SettingsContext';
 import dayjs from 'dayjs';
 import type { GeneralExpenseVoucherData } from '../components/GeneralExpenseVoucherPDF';
 
@@ -47,6 +48,7 @@ const categoryColors: Record<string, string> = {
 const ExpensesPage = () => {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<any[]>([]);
+  const { formatCurrency, countryConfig } = useSettings();
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingExpense, setEditingExpense] = useState<any>(null);
@@ -199,7 +201,7 @@ const ExpensesPage = () => {
             <span className="material-symbols-outlined text-red-500 text-2xl">receipt</span>
             <div>
               <p className="text-label-sm text-on-surface-variant">إجمالي المصروفات</p>
-              <p className="text-headline-md font-bold text-red-600">ر.س {totalAmount.toLocaleString()}</p>
+              <p className="text-headline-md font-bold text-red-600">{formatCurrency(totalAmount)}</p>
             </div>
           </div>
         </div>
@@ -249,7 +251,7 @@ const ExpensesPage = () => {
                         {e.category}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-bold text-red-600">{e.amount.toLocaleString()} ر.س</td>
+                    <td className="px-6 py-4 font-bold text-red-600">{formatCurrency(e.amount)}</td>
                     <td className="px-6 py-4">{new Date(e.expense_date).toLocaleDateString('ar-SA')}</td>
                     <td className="px-6 py-4 text-on-surface-variant max-w-[200px] truncate">{e.notes || '—'}</td>
                     <td className="px-6 py-4">
@@ -287,7 +289,7 @@ const ExpensesPage = () => {
                 <tr>
                   <td className="px-6 py-4 text-on-surface">الإجمالي</td>
                   <td className="px-6 py-4"></td>
-                  <td className="px-6 py-4 text-red-600">{totalAmount.toLocaleString()} ر.س</td>
+                  <td className="px-6 py-4 text-red-600">{formatCurrency(totalAmount)}</td>
                   <td className="px-6 py-4"></td>
                   <td className="px-6 py-4"></td>
                   <td className="px-6 py-4"></td>
@@ -312,7 +314,7 @@ const ExpensesPage = () => {
               </div>
             </div>
             <p className="font-body-md text-body-md font-bold">{e.description}</p>
-            <p className="text-headline-sm font-bold text-red-600 mt-1">{e.amount.toLocaleString()} ر.س</p>
+            <p className="text-headline-sm font-bold text-red-600 mt-1">{formatCurrency(e.amount)}</p>
             <p className="text-label-sm text-on-surface-variant mt-1">
               {new Date(e.expense_date).toLocaleDateString('ar-SA')}
               {e.notes ? ` — ${e.notes}` : ''}
@@ -346,7 +348,7 @@ const ExpensesPage = () => {
               label="المبلغ"
               rules={[{ required: true, message: 'الرجاء إدخال المبلغ' }]}
             >
-              <InputNumber className="w-full" min={0} prefix="ر.س" placeholder="0" />
+              <InputNumber className="w-full" min={0} prefix={countryConfig.currencySymbol} placeholder="0" />
             </Form.Item>
             <Form.Item
               name="category"
