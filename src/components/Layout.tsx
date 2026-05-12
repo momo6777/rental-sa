@@ -11,6 +11,7 @@ const navItems = [
   { key: '/contracts', label: 'العقود', icon: 'description' },
   { key: '/payments', label: 'المالية', icon: 'payments' },
   { key: '/accounting', label: 'المحاسبة', icon: 'account_balance' },
+  { key: '/expenses', label: 'المصروفات', icon: 'receipt_long' },
   { key: '/maintenance', label: 'الصيانة', icon: 'build' },
   { key: '/reports', label: 'التقارير', icon: 'bar_chart' },
   { key: '/settings', label: 'الإعدادات', icon: 'settings' },

@@ -16,6 +16,12 @@ interface MaintenanceExpenseRow {
   created_at: string;
 }
 
+interface GeneralExpenseRow {
+  id: string;
+  amount: number;
+  expense_date: string;
+}
+
 interface AgingPayment {
   id: string;
   total_amount: number;
@@ -75,7 +81,7 @@ const AccountingPage = () => {
     try {
       setLoading(true);
 
-      const [paidRes, expenseRes, agingRes] = await Promise.all([
+      const [paidRes, expenseRes, agingRes, generalExpRes] = await Promise.all([
         supabase
           .from('payments')
           .select('id, amount, total_amount, paid_date, created_at')
@@ -88,15 +94,20 @@ const AccountingPage = () => {
           .select('id, total_amount, amount, due_date, status, contract:contracts(tenant:tenants(full_name_ar, phone))')
           .in('status', ['overdue', 'pending'])
           .order('due_date', { ascending: true }),
+        supabase
+          .from('general_expenses')
+          .select('id, amount, expense_date'),
       ]);
 
       if (paidRes.error) throw paidRes.error;
       if (expenseRes.error) throw expenseRes.error;
       if (agingRes.error) throw agingRes.error;
+      if (generalExpRes.error) throw generalExpRes.error;
 
-      buildPL(paidRes.data || [], expenseRes.data || []);
+      const generalExpenses = generalExpRes.data || [];
+      buildPL(paidRes.data || [], expenseRes.data || [], generalExpenses);
       buildAging(agingRes.data || []);
-      buildCashFlow(paidRes.data || [], expenseRes.data || []);
+      buildCashFlow(paidRes.data || [], expenseRes.data || [], generalExpenses);
     } catch (err: any) {
       console.error('Error loading accounting data:', err);
     } finally {
@@ -114,7 +125,7 @@ const AccountingPage = () => {
     return d.toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' });
   };
 
-  const buildPL = (payments: PaidPayment[], expenses: MaintenanceExpenseRow[]) => {
+  const buildPL = (payments: PaidPayment[], expenses: MaintenanceExpenseRow[], general: GeneralExpenseRow[]) => {
     const revMap = new Map<string, number>();
     for (const p of payments) {
       const k = getMonthKey(p.paid_date || p.created_at);
@@ -125,6 +136,10 @@ const AccountingPage = () => {
     for (const e of expenses) {
       const k = getMonthKey(e.created_at);
       expMap.set(k, (expMap.get(k) || 0) + (e.amount || 0));
+    }
+    for (const g of general) {
+      const k = getMonthKey(g.expense_date);
+      expMap.set(k, (expMap.get(k) || 0) + (g.amount || 0));
     }
 
     const allKeys = new Set([...revMap.keys(), ...expMap.keys()]);
@@ -178,7 +193,7 @@ const AccountingPage = () => {
     setAgingBuckets([...buckets, pendingBucket]);
   };
 
-  const buildCashFlow = (payments: PaidPayment[], expenses: MaintenanceExpenseRow[]) => {
+  const buildCashFlow = (payments: PaidPayment[], expenses: MaintenanceExpenseRow[], general: GeneralExpenseRow[]) => {
     const inflowMap = new Map<string, number>();
     for (const p of payments) {
       const k = getMonthKey(p.paid_date || p.created_at);
@@ -189,6 +204,10 @@ const AccountingPage = () => {
     for (const e of expenses) {
       const k = getMonthKey(e.created_at);
       outflowMap.set(k, (outflowMap.get(k) || 0) + (e.amount || 0));
+    }
+    for (const g of general) {
+      const k = getMonthKey(g.expense_date);
+      outflowMap.set(k, (outflowMap.get(k) || 0) + (g.amount || 0));
     }
 
     const allKeys = new Set([...inflowMap.keys(), ...outflowMap.keys()]);

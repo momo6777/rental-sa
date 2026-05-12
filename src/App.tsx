@@ -15,6 +15,7 @@ import Payments from './pages/Payments';
 import Maintenance from './pages/Maintenance';
 import Reports from './pages/Reports';
 import Accounting from './pages/Accounting';
+import Expenses from './pages/Expenses';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 
@@ -45,6 +46,7 @@ function App() {
               <Route path="/payments" element={<Payments />} />
               <Route path="/maintenance" element={<Maintenance />} />
               <Route path="/accounting" element={<Accounting />} />
+              <Route path="/expenses" element={<Expenses />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/login" element={<Navigate replace to="/dashboard" />} />

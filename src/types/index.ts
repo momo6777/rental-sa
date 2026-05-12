@@ -101,6 +101,18 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface GeneralExpense {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  expense_date: string;
+  notes?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Notification {
   id: string;
   user_id: string;
