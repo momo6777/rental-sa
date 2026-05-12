@@ -1,5 +1,4 @@
 import { Badge, Popover, List, Button, Typography, Space, Empty } from 'antd';
-import { BellOutlined, CheckOutlined } from '@ant-design/icons';
 import { useNotifications } from '../hooks/useNotifications';
 import { useNavigate } from 'react-router-dom';
 import styles from './NotificationBell.module.css';
@@ -69,7 +68,9 @@ export const NotificationBell = () => {
   return (
     <Popover content={content} trigger="click" placement="bottomRight" overlayClassName={styles.popoverOverlay}>
       <Badge count={unreadCount} size="small" className={styles.bell}>
-        <BellOutlined style={{ fontSize: 20, color: '#fff', cursor: 'pointer' }} />
+        <span className="material-symbols-outlined text-on-surface-variant cursor-pointer text-[22px] leading-none p-1">
+          notifications
+        </span>
       </Badge>
     </Popover>
   );
