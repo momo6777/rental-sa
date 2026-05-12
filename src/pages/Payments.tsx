@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import AddEditPayment from './AddEditPayment';
-import { ReceiptVoucherPDF } from '../components/ReceiptVoucherPDF';
+
+const ReceiptVoucherPDF = lazy(() =>
+  import('../components/ReceiptVoucherPDF').then((m) => ({ default: m.ReceiptVoucherPDF }))
+);
 
 const PaymentsPage = () => {
   const { user } = useAuth();
@@ -212,7 +215,9 @@ const PaymentsPage = () => {
                       <td className="px-card-padding py-4 text-on-surface-variant">{p.payment_method || '-'}</td>
                       <td className="px-card-padding py-4">
                         {p.status === 'paid' && p.contract && (
-                          <ReceiptVoucherPDF payment={p} />
+                          <Suspense fallback={<span className="text-label-sm text-on-surface-variant">جاري التحميل...</span>}>
+                            <ReceiptVoucherPDF payment={p} />
+                          </Suspense>
                         )}
                       </td>
                     </tr>
@@ -269,7 +274,9 @@ const PaymentsPage = () => {
               </div>
               {p.status === 'paid' && p.contract && (
                 <div className="mt-3 pt-3 border-t border-outline-variant flex justify-center">
-                  <ReceiptVoucherPDF payment={p} />
+                  <Suspense fallback={<span className="text-label-sm text-on-surface-variant">جاري التحميل...</span>}>
+                    <ReceiptVoucherPDF payment={p} />
+                  </Suspense>
                 </div>
               )}
             </div>

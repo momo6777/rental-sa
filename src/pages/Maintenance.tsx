@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { Modal, Form, Input, Select, Upload, DatePicker, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { PaymentVoucherPDF, PaymentVoucherData } from '../components/PaymentVoucherPDF';
+import type { PaymentVoucherData } from '../components/PaymentVoucherPDF';
 import dayjs from 'dayjs';
+
+const PaymentVoucherPDF = lazy(() =>
+  import('../components/PaymentVoucherPDF').then((m) => ({ default: m.PaymentVoucherPDF }))
+);
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -504,7 +508,9 @@ const MaintenancePage = () => {
               </p>
             </div>
             <div className="flex justify-center">
-              <PaymentVoucherPDF data={voucherData} />
+              <Suspense fallback={<span className="text-label-sm text-on-surface-variant">جاري التحميل...</span>}>
+                <PaymentVoucherPDF data={voucherData} />
+              </Suspense>
             </div>
             <div className="flex justify-end">
               <button
