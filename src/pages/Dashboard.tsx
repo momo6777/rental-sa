@@ -1,22 +1,6 @@
-import { Card, Statistic, Tag, Spin, Space, Typography, List, Avatar } from 'antd';
-import {
-  DollarCircleOutlined,
-  HomeOutlined,
-  CalendarOutlined,
-  ToolOutlined,
-  WarningOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  BarChartOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Column } from '@ant-design/charts';
-import styles from './Dashboard.module.css';
 import { useNavigate } from 'react-router-dom';
-
-const { Text } = Typography;
 
 interface MonthlyRevenue {
   month: string;
@@ -28,9 +12,7 @@ interface DuePayment {
   total_amount: number;
   due_date: string;
   status: string;
-  contract: {
-    tenant: { full_name_ar: string };
-  } | null;
+  contract: { tenant: { full_name_ar: string } } | null;
 }
 
 interface ExpiringContract {
@@ -38,10 +20,7 @@ interface ExpiringContract {
   end_date: string;
   status: string;
   tenant: { full_name_ar: string } | null;
-  unit: {
-    unit_number: string;
-    property: { name_ar: string } | null;
-  } | null;
+  unit: { unit_number: string; property: { name_ar: string } | null } | null;
 }
 
 interface MaintenanceItem {
@@ -61,6 +40,8 @@ const DashboardPage = () => {
     collected: 0,
     overdue: 0,
     occupancyRate: 0,
+    totalUnits: 0,
+    rentedUnits: 0,
   });
   const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenue[]>([]);
   const [duePayments, setDuePayments] = useState<DuePayment[]>([]);
@@ -76,34 +57,29 @@ const DashboardPage = () => {
       setLoading(true);
       setError(null);
 
-      const [
-        paymentsResult,
-        unitsResult,
-        duePaymentsResult,
-        contractsResult,
-        maintenanceResult,
-      ] = await Promise.all([
-        supabase.from('payments').select('amount, vat_amount, total_amount, status, due_date, paid_date, created_at'),
-        supabase.from('units').select('status'),
-        supabase.from('payments').select(`
-          id, total_amount, due_date, status,
-          contract:contracts (
-            tenant:tenants (full_name_ar)
-          )
-        `).in('status', ['pending', 'overdue']).order('due_date', { ascending: true }).limit(5),
-        supabase.from('contracts').select(`
-          id, end_date, status,
-          tenant:tenants (full_name_ar),
-          unit:units (
-            unit_number,
-            property:properties (name_ar)
-          )
-        `).eq('status', 'active').order('end_date', { ascending: true }).limit(5),
-        supabase.from('maintenance_requests').select(`
-          id, title, priority, status,
-          unit:units (unit_number)
-        `).in('status', ['open', 'in_progress']).order('created_at', { ascending: false }).limit(5),
-      ]);
+      const [paymentsResult, unitsResult, duePaymentsResult, contractsResult, maintenanceResult] =
+        await Promise.all([
+          supabase.from('payments').select('amount, vat_amount, total_amount, status, due_date, paid_date, created_at'),
+          supabase.from('units').select('status'),
+          supabase
+            .from('payments')
+            .select('id, total_amount, due_date, status, contract:contracts(tenant:tenants(full_name_ar))')
+            .in('status', ['pending', 'overdue'])
+            .order('due_date', { ascending: true })
+            .limit(5),
+          supabase
+            .from('contracts')
+            .select('id, end_date, status, tenant:tenants(full_name_ar), unit:units(unit_number, property:properties(name_ar))')
+            .eq('status', 'active')
+            .order('end_date', { ascending: true })
+            .limit(5),
+          supabase
+            .from('maintenance_requests')
+            .select('id, title, priority, status, unit:units(unit_number)')
+            .in('status', ['open', 'in_progress'])
+            .order('created_at', { ascending: false })
+            .limit(5),
+        ]);
 
       if (paymentsResult.error) throw paymentsResult.error;
       if (unitsResult.error) throw unitsResult.error;
@@ -115,11 +91,17 @@ const DashboardPage = () => {
       const units = unitsResult.data || [];
 
       const totalRevenue = payments.reduce((sum, p) => sum + (p.total_amount || 0), 0);
-      const collected = payments.reduce((sum, p) => sum + (p.status === 'paid' ? (p.total_amount || 0) : 0), 0);
-      const overdue = payments.reduce((sum, p) => sum + (p.status === 'overdue' ? (p.total_amount || 0) : 0), 0);
+      const collected = payments.reduce(
+        (sum, p) => sum + (p.status === 'paid' ? p.total_amount || 0 : 0),
+        0
+      );
+      const overdue = payments.reduce(
+        (sum, p) => sum + (p.status === 'overdue' ? p.total_amount || 0 : 0),
+        0
+      );
 
       const totalUnits = units.length;
-      const rentedUnits = units.filter(u => u.status === 'rented').length;
+      const rentedUnits = units.filter((u) => u.status === 'rented').length;
       const occupancyRate = totalUnits > 0 ? (rentedUnits / totalUnits) * 100 : 0;
 
       setStats({
@@ -127,6 +109,8 @@ const DashboardPage = () => {
         collected,
         overdue,
         occupancyRate: Math.round(occupancyRate * 10) / 10,
+        totalUnits,
+        rentedUnits,
       });
 
       const monthlyData: MonthlyRevenue[] = [];
@@ -134,13 +118,13 @@ const DashboardPage = () => {
       for (let i = 11; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthKey = date.toISOString().slice(0, 7);
-        const monthPayments = payments.filter(p => {
+        const monthPayments = payments.filter((p) => {
           const paymentDate = new Date(p.paid_date || p.due_date || p.created_at);
           return paymentDate.toISOString().slice(0, 7) === monthKey;
         });
         const monthTotal = monthPayments.reduce((sum, p) => sum + (p.total_amount || 0), 0);
         monthlyData.push({
-          month: date.toLocaleDateString('ar-SA', { month: 'short', year: 'numeric' }),
+          month: date.toLocaleDateString('ar-SA', { month: 'short' }),
           revenue: monthTotal,
         });
       }
@@ -157,271 +141,207 @@ const DashboardPage = () => {
     }
   };
 
+  const maxRevenue = Math.max(...monthlyRevenue.map((m) => m.revenue), 1);
+  const months = ['يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  const now = new Date();
+  const dateStr = `${months[now.getMonth()]} ${now.getFullYear()}`;
+
   if (loading) {
     return (
-      <div className={styles.dashboard}>
-        <div className={styles.loading}>
-          <Spin tip="جاري تحميل البيانات..." />
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-primary/20"></div>
+          <div className="h-4 w-40 bg-surface-container-highest rounded"></div>
         </div>
       </div>
     );
   }
 
-  const overdueChange = stats.overdue > 0
-    ? ((stats.overdue / (stats.totalRevenue || 1)) * 100).toFixed(1)
-    : '0';
-
-  const columnConfig = {
-    data: monthlyRevenue,
-    xField: 'month',
-    yField: 'revenue',
-    color: '#ffd700',
-    columnStyle: { radius: [4, 4, 0, 0] },
-    meta: {
-      revenue: { alias: 'الإيرادات (ر.س)' },
-    },
-    tooltip: {
-      formatter: (datum: any) => ({
-        name: 'الإيرادات',
-        value: `${datum.revenue?.toLocaleString()} ر.س`,
-      }),
-    },
-    axis: {
-      x: {
-        label: { style: { fill: '#999' } },
-      },
-      y: {
-        label: {
-          style: { fill: '#999' },
-          formatter: (v: string) => `${(Number(v) / 1000).toFixed(0)}k`,
-        },
-      },
-    },
-  };
-
-  const renderStatusTag = (status: string) => {
-    const colors: Record<string, string> = {
-      paid: 'green', pending: 'orange', overdue: 'red',
-      active: 'blue', expired: 'default', terminated: 'red',
-      open: 'orange', in_progress: 'processing', completed: 'green',
-    };
-    const labels: Record<string, string> = {
-      paid: 'مدفوع', pending: 'مستحق', overdue: 'متأخر',
-      active: 'نشط', expired: 'منتهي', terminated: 'ملغي',
-      open: 'مفتوح', in_progress: 'قيد التنفيذ', completed: 'مكتمل',
-    };
-    return <Tag color={colors[status] || 'default'}>{labels[status] || status}</Tag>;
-  };
-
-  const renderPriorityTag = (priority: string) => {
-    const colors: Record<string, string> = { low: 'green', medium: 'blue', high: 'orange', urgent: 'red' };
-    const labels: Record<string, string> = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة' };
-    return <Tag color={colors[priority] || 'default'}>{labels[priority] || priority}</Tag>;
-  };
-
   return (
-    <div className={styles.dashboard}>
-      <div className={styles.header}>
-        <h1>لوحة التحكم</h1>
-        <p>ملخص شامل لأداء العقارات</p>
+    <div className="space-y-container-margin">
+      {/* Header */}
+      <div className="flex items-end justify-between">
+        <div>
+          <h2 className="font-headline-lg text-headline-lg text-primary">لوحة التحكم الرئيسية</h2>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-1">أهلاً بك، إليك ملخص لأداء محفظتك العقارية اليوم.</p>
+        </div>
+        <div className="text-on-surface-variant font-label-md">{dateStr}</div>
       </div>
 
-      {/* Stats Cards */}
-      <div className={styles.gridRow}>
-        <Card className={styles.statCard}>
-          <Statistic
-            title="إجمالي الإيرادات"
-            value={`ر.س ${stats.totalRevenue.toLocaleString()}`}
-            precision={2}
-            prefix={<DollarCircleOutlined style={{ fontSize: '1.5rem', color: '#ffd700' }} />}
-          />
-        </Card>
-        <Card className={styles.statCard}>
-          <Statistic
-            title="المحصّل"
-            value={`ر.س ${stats.collected.toLocaleString()}`}
-            precision={2}
-            prefix={<CheckCircleOutlined style={{ fontSize: '1.5rem', color: '#52c41a' }} />}
-            suffix={<Tag color="green">مُسدَّد</Tag>}
-          />
-        </Card>
-        <Card className={styles.statCard}>
-          <Statistic
-            title="المتأخر"
-            value={`ر.س ${stats.overdue.toLocaleString()}`}
-            precision={2}
-            valueStyle={{ color: stats.overdue > 0 ? '#ff4d4f' : '#52c41a' }}
-            prefix={<CloseCircleOutlined style={{ fontSize: '1.5rem' }} />}
-            suffix={<Tag color={stats.overdue > 0 ? 'red' : 'green'}>{overdueChange}%</Tag>}
-          />
-        </Card>
-        <Card className={styles.statCard}>
-          <Statistic
-            title="نسبة الإشغال"
-            value={`${stats.occupancyRate}%`}
-            precision={1}
-            prefix={<HomeOutlined style={{ fontSize: '1.5rem', color: '#1890ff' }} />}
-          />
-        </Card>
-      </div>
+      {error && (
+        <div className="bg-error-container text-error p-4 rounded-xl text-body-sm">
+          {error}
+        </div>
+      )}
 
-      {/* Revenue Chart */}
-      <div className={styles.section}>
-        <h2><DollarCircleOutlined /> الإيرادات الشهرية (آخر 12 شهر)</h2>
-        <div className={styles.chartContainer}>
-          {monthlyRevenue.length > 0 ? (
-            <Column {...columnConfig} />
-          ) : (
-            <div className={styles.chartPlaceholder}>
-              <BarChartOutlined style={{ fontSize: '3rem', color: 'rgba(255,215,0,0.3)' }} />
-              <p className={styles.chartText}>لا توجد بيانات إيرادات بعد</p>
-            </div>
-          )}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+        <div className="bg-white p-card-padding rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <span className="p-2 bg-primary-container/10 text-primary rounded-lg material-symbols-outlined">home_work</span>
+            <span className="text-on-secondary-container font-label-sm px-2 py-1 bg-secondary-container rounded-full">
+              +{stats.totalUnits > 0 ? ((stats.rentedUnits / stats.totalUnits) * 100).toFixed(0) : 0}%
+            </span>
+          </div>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">إجمالي الوحدات</p>
+          <h3 className="font-headline-xl text-headline-xl text-primary">{stats.totalUnits}</h3>
+        </div>
+
+        <div className="bg-white p-card-padding rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <span className="p-2 bg-secondary-container/20 text-secondary rounded-lg material-symbols-outlined">analytics</span>
+            <span className="text-secondary font-label-sm px-2 py-1 bg-secondary-container/10 rounded-full">{stats.occupancyRate}%</span>
+          </div>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">نسبة الإشغال</p>
+          <div className="w-full bg-surface-container rounded-full h-2 mt-4">
+            <div className="bg-secondary h-2 rounded-full" style={{ width: `${stats.occupancyRate}%` }}></div>
+          </div>
+        </div>
+
+        <div className="bg-white p-card-padding rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <span className="p-2 bg-error-container/20 text-error rounded-lg material-symbols-outlined">warning</span>
+          </div>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">المتأخرات المالية</p>
+          <h3 className="font-headline-xl text-headline-xl text-error">
+            {stats.overdue.toLocaleString()} <span className="text-body-sm font-normal">ر.س</span>
+          </h3>
+        </div>
+
+        <div className="bg-white p-card-padding rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <span className="p-2 bg-tertiary-fixed/30 text-tertiary rounded-lg material-symbols-outlined">event_repeat</span>
+            <span className="text-tertiary font-label-sm px-2 py-1 bg-tertiary-fixed rounded-full">
+              {expiringContracts.length} عقد
+            </span>
+          </div>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">عقود تنتهي قريباً</p>
+          <h3 className="font-headline-xl text-headline-xl text-tertiary">{expiringContracts.length}</h3>
         </div>
       </div>
 
-      {/* Lists Row */}
-      <div className={styles.gridRow}>
-        {/* Due Payments */}
-        <Card
-          className={styles.infoCard}
-          title={<span><WarningOutlined style={{ color: '#fa8c16' }} /> أقرب 5 دفعات مستحقة</span>}
-        >
-          {duePayments.length === 0 ? (
-            <div className={styles.emptyState}>
-              <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a' }} />
-              <p>لا توجد دفعات مستحقة</p>
-            </div>
-          ) : (
-            <List
-              dataSource={duePayments}
-              renderItem={(item) => (
-                <List.Item
-                  className={styles.listItem}
-                  onClick={() => navigate('/payments')}
-                >
-                  <List.Item.Meta
-                    avatar={<Avatar icon={<DollarCircleOutlined />} className={styles.avatarGold} />}
-                    title={
-                      <Space>
-                        <Text className={styles.itemTitle}>{item.contract?.tenant?.full_name_ar || '-'}</Text>
-                        {renderStatusTag(item.status)}
-                      </Space>
-                    }
-                    description={
-                      <Space direction="vertical" size={0}>
-                        <Text className={styles.itemDesc}>
-                          <CalendarOutlined /> {item.due_date ? new Date(item.due_date).toLocaleDateString('ar-SA') : '-'}
-                        </Text>
-                        <Text className={styles.itemAmount}>ر.س {item.total_amount?.toLocaleString()}</Text>
-                      </Space>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
-          )}
-        </Card>
+      {/* Bento Grid - Chart + Activities */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+        {/* Revenue Chart */}
+        <div className="lg:col-span-2 bg-white p-card-padding rounded-xl border border-outline-variant shadow-sm">
+          <div className="flex items-center justify-between mb-8">
+            <h4 className="font-headline-md text-headline-md text-on-surface">التحصيل المالي الشهري</h4>
+            <select className="bg-surface-container-low border-none rounded-lg text-label-md px-4 py-1">
+              <option>آخر 6 أشهر</option>
+              <option>سنة كاملة</option>
+            </select>
+          </div>
+          <div className="h-64 flex items-end justify-between gap-4 px-4 border-b border-outline-variant/30">
+            {monthlyRevenue.slice(-6).map((item, i) => {
+              const height = Math.max((item.revenue / maxRevenue) * 100, 4);
+              const isMax = item.revenue >= maxRevenue;
+              return (
+                <div key={i} className="flex flex-col items-center gap-2 flex-1 group">
+                  <div
+                    className={`w-full rounded-t-lg transition-colors ${
+                      isMax ? 'bg-primary' : 'bg-primary/20 group-hover:bg-primary'
+                    }`}
+                    style={{ height: `${height}%` }}
+                  ></div>
+                  <span className={`font-label-sm ${isMax ? 'text-primary font-bold' : 'text-on-surface-variant'}`}>
+                    {item.month}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-        {/* Expiring Contracts */}
-        <Card
-          className={styles.infoCard}
-          title={<span><CalendarOutlined style={{ color: '#1890ff' }} /> أقرب 5 عقود تنتهي</span>}
-        >
-          {expiringContracts.length === 0 ? (
-            <div className={styles.emptyState}>
-              <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a' }} />
-              <p>لا توجد عقود تنتهي قريباً</p>
-            </div>
-          ) : (
-            <List
-              dataSource={expiringContracts}
-              renderItem={(item) => {
-                const daysLeft = Math.ceil(
-                  (new Date(item.end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-                );
-                const isUrgent = daysLeft <= 30;
-                const isWarning = daysLeft <= 90;
-                return (
-                  <List.Item
-                    className={styles.listItem}
-                    onClick={() => navigate('/contracts')}
-                  >
-                    <List.Item.Meta
-                      avatar={
-                        <Avatar
-                          icon={<FileTextOutlined />}
-                          className={isUrgent ? styles.avatarRed : isWarning ? styles.avatarOrange : styles.avatarBlue}
-                        />
-                      }
-                      title={
-                        <Space>
-                          <Text className={styles.itemTitle}>{item.tenant?.full_name_ar || '-'}</Text>
-                          <Tag color={isUrgent ? 'red' : isWarning ? 'orange' : 'blue'}>
-                            {daysLeft <= 0 ? 'منتهي' : `${daysLeft} يوم`}
-                          </Tag>
-                        </Space>
-                      }
-                      description={
-                        <Text className={styles.itemDesc}>
-                          {item.unit?.property?.name_ar || '-'} - وحدة {item.unit?.unit_number || '-'}
-                          {' | '}
-                          ينتهي: {new Date(item.end_date).toLocaleDateString('ar-SA')}
-                        </Text>
-                      }
-                    />
-                  </List.Item>
-                );
-              }}
-            />
-          )}
-        </Card>
+        {/* Activities */}
+        <div className="bg-white p-card-padding rounded-xl border border-outline-variant shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h4 className="font-headline-md text-headline-md text-on-surface">آخر النشاطات</h4>
+            <button className="text-primary font-label-md hover:underline">عرض الكل</button>
+          </div>
+          <div className="space-y-6 flex-1 overflow-y-auto pr-1">
+            {/* Recent payments */}
+            {duePayments.slice(0, 2).map((p) => (
+              <div key={p.id} className="flex gap-4 relative cursor-pointer" onClick={() => navigate('/payments')}>
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-secondary-container/30 flex items-center justify-center text-secondary">
+                  <span className="material-symbols-outlined">payments</span>
+                </div>
+                <div>
+                  <p className="font-body-md text-body-md">
+                    {p.status === 'overdue' ? 'دفعة متأخرة من ' : 'دفعة مستحقة من '}
+                    <span className="font-bold">{p.contract?.tenant?.full_name_ar || 'مستأجر'}</span>
+                  </p>
+                  <span className="text-label-sm text-on-surface-variant">
+                    {p.total_amount.toLocaleString()} ر.س - {new Date(p.due_date).toLocaleDateString('ar-SA')}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {/* Expiring contracts */}
+            {expiringContracts.slice(0, 2).map((c) => {
+              const daysLeft = Math.ceil((new Date(c.end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              return (
+                <div key={c.id} className="flex gap-4 relative cursor-pointer" onClick={() => navigate('/contracts')}>
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                    daysLeft <= 30 ? 'bg-error-container/20 text-error' : 'bg-primary-container/10 text-primary'
+                  }`}>
+                    <span className="material-symbols-outlined">history_edu</span>
+                  </div>
+                  <div>
+                    <p className="font-body-md text-body-md">
+                      عقد <span className="font-bold">{c.tenant?.full_name_ar || 'مستأجر'}</span>{' '}
+                      {daysLeft <= 0 ? 'منتهي' : `ينتهي خلال ${daysLeft} يوم`}
+                    </p>
+                    <span className="text-label-sm text-on-surface-variant">
+                      {c.unit?.property?.name_ar || ''} - وحدة {c.unit?.unit_number || ''}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+            {/* Maintenance */}
+            {maintenanceItems.slice(0, 1).map((m) => (
+              <div key={m.id} className="flex gap-4 relative cursor-pointer" onClick={() => navigate('/maintenance')}>
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-error-container/20 flex items-center justify-center text-error">
+                  <span className="material-symbols-outlined">engineering</span>
+                </div>
+                <div>
+                  <p className="font-body-md text-body-md">
+                    طلب صيانة{m.priority === 'urgent' ? ' طارئ' : ''} - <span className="font-bold">{m.title}</span>
+                  </p>
+                  <span className="text-label-sm text-on-surface-variant">وحدة {m.unit?.unit_number || '-'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Maintenance Requests */}
-      <div className={styles.section}>
-        <Card
-          className={styles.infoCard}
-          title={<span><ToolOutlined style={{ color: '#ff4d4f' }} /> طلبات الصيانة المفتوحة</span>}
-        >
-          {maintenanceItems.length === 0 ? (
-            <div className={styles.emptyState}>
-              <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a' }} />
-              <p>لا توجد طلبات صيانة مفتوحة</p>
+      {/* Featured Section */}
+      <div className="relative rounded-2xl overflow-hidden h-72 bg-primary">
+        <div className="absolute inset-0 bg-gradient-to-l from-primary/80 via-primary/60 to-primary/90"></div>
+        <div className="absolute inset-0 flex items-center p-container-margin">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-xl max-w-lg text-white">
+            <h3 className="font-headline-lg text-headline-lg mb-2">أداء المحفظة العقارية</h3>
+            <p className="font-body-md text-body-md opacity-90 mb-6">
+              إجمالي الإيرادات {stats.collected.toLocaleString()} ر.س بنسبة تحصيل{' '}
+              {stats.totalRevenue > 0 ? ((stats.collected / stats.totalRevenue) * 100).toFixed(1) : 0}%
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => navigate('/reports')}
+                className="bg-white text-primary px-6 py-2 rounded-lg font-label-md hover:bg-surface-variant transition-colors"
+              >
+                تحليل البيانات
+              </button>
+              <button
+                onClick={() => navigate('/properties')}
+                className="border border-white/40 text-white px-6 py-2 rounded-lg font-label-md hover:bg-white/10 transition-colors"
+              >
+                عرض العقارات
+              </button>
             </div>
-          ) : (
-            <List
-              dataSource={maintenanceItems}
-              renderItem={(item) => (
-                <List.Item
-                  className={styles.listItem}
-                  onClick={() => navigate('/maintenance')}
-                >
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar
-                        icon={<ToolOutlined />}
-                        className={item.priority === 'urgent' ? styles.avatarRed : item.priority === 'high' ? styles.avatarOrange : styles.avatarBlue}
-                      />
-                    }
-                    title={
-                      <Space>
-                        <Text className={styles.itemTitle}>{item.title}</Text>
-                        {renderPriorityTag(item.priority)}
-                        {renderStatusTag(item.status)}
-                      </Space>
-                    }
-                    description={
-                      <Text className={styles.itemDesc}>
-                        وحدة {item.unit?.unit_number || '-'}
-                      </Text>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
-          )}
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

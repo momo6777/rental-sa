@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Input, Select, DatePicker, Button, message, Modal, Checkbox } from 'antd';
-import { useAuth } from '../hooks/useAuth';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Form, Input, InputNumber, Select, DatePicker, Button, message, Modal } from 'antd';
 import { supabase } from '../lib/supabase';
+import { calcVAT } from '../lib/vatCalculator';
+import { generateInvoiceNumber } from '../lib/invoiceGenerator';
 import dayjs from 'dayjs';
-import styles from './AddEditPayment.module.css';
 
 const { Option } = Select;
 
@@ -14,33 +14,55 @@ export type AddEditPaymentProps = {
 };
 
 const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, visible }) => {
-  const { user } = useAuth();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [paymentData, setPaymentData] = useState({
-    contract_id: '' as string,
-    amount: 0 as number,
-    vat_amount: 0 as number,
-    total_amount: 0 as number,
-    due_date: null as string | null,
-    paid_date: null as string | null,
-    status: 'pending' as 'pending' | 'paid' | 'overdue',
-    payment_method: 'cash' as 'sadad' | 'transfer' | 'cash',
-    sadad_reference: '' as string,
-    invoice_number: '' as string,
-  });
-
   const [contracts, setContracts] = useState<Array<{ id: string; ejar_contract_number: string }>>([]);
+  const [isCommercial, setIsCommercial] = useState(false);
 
   const isEditing = !!paymentId;
 
   useEffect(() => {
+    if (!visible) return;
     fetchContracts();
     if (paymentId) {
       fetchPaymentDetails();
+    } else {
+      form.setFieldsValue({ invoice_number: generateInvoiceNumber() });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paymentId]);
+  }, [paymentId, visible]);
+
+  const handleContractChange = useCallback(async (contractId: string) => {
+    if (!contractId) return;
+    try {
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('unit:units(is_commercial)')
+        .eq('id', contractId)
+        .single();
+      if (error) throw error;
+      const commercial = (data as any)?.unit?.is_commercial ?? false;
+      setIsCommercial(commercial);
+      const amount = form.getFieldValue('amount');
+      if (amount > 0) {
+        const vatResult = calcVAT(Number(amount), commercial);
+        form.setFieldsValue({
+          vat_amount: vatResult.vat,
+          total_amount: vatResult.total,
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching contract details', err);
+    }
+  }, [form]);
+
+  const handleAmountChange = useCallback((value: number | null) => {
+    const amount = value ?? 0;
+    const vatResult = calcVAT(amount, isCommercial);
+    form.setFieldsValue({
+      vat_amount: vatResult.vat,
+      total_amount: vatResult.total,
+    });
+  }, [form, isCommercial]);
 
   const fetchContracts = async () => {
     try {
@@ -57,11 +79,14 @@ const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, vis
       setLoading(true);
       const { data, error } = await supabase.from('payments').select('*').eq('id', paymentId).single();
       if (error) throw error;
-      setPaymentData({
+      const formatted = {
         ...data,
-        due_date: data.due_date ? dayjs(data.due_date).format('YYYY-MM-DD') : null,
-        paid_date: data.paid_date ? dayjs(data.paid_date).format('YYYY-MM-DD') : null,
-      });
+        due_date: data.due_date ? dayjs(data.due_date) : null,
+        paid_date: data.paid_date ? dayjs(data.paid_date) : null,
+      };
+      form.setFieldsValue(formatted);
+      if (data.contract_id) handleContractChange(data.contract_id);
+      if (data.amount) setIsCommercial(data.vat_amount > 0);
     } catch (err: any) {
       console.error('Error loading payment', err);
       message.error(err.message || 'فشل تحميل بيانات الدفعة');
@@ -73,19 +98,17 @@ const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, vis
   const handleSubmit = async (values: any) => {
     try {
       setLoading(true);
-      // Convert dates to strings if needed
-      if (values.due_date) {
-        values.due_date = values.due_date.format('YYYY-MM-DD');
-      }
-      if (values.paid_date) {
-        values.paid_date = values.paid_date.format('YYYY-MM-DD');
-      }
+      const payload = {
+        ...values,
+        due_date: values.due_date?.format('YYYY-MM-DD'),
+        paid_date: values.paid_date?.format('YYYY-MM-DD') || null,
+      };
 
       let result;
       if (isEditing) {
-        result = await supabase.from('payments').update(values).eq('id', paymentId);
+        result = await supabase.from('payments').update(payload).eq('id', paymentId);
       } else {
-        result = await supabase.from('payments').insert([values]);
+        result = await supabase.from('payments').insert([payload]);
       }
       if (result.error) throw result.error;
       message.success(isEditing ? 'تم تعديل الدفعة بنجاح' : 'تم إضافة الدفعة بنجاح');
@@ -103,11 +126,13 @@ const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, vis
   return (
     <Modal
       title={isEditing ? 'تعديل دفعة' : 'إضافة دفعة جديدة'}
-      visible={true}
+      open={visible}
       onCancel={onClose}
       footer={[
         <Button key="back" onClick={onClose}>إلغاء</Button>,
-        <Button key="submit" type="primary" loading={loading} onClick={() => form.submit()}>{isEditing ? 'حفظ التغييرات' : 'إضافة الدفعة'}</Button>,
+        <Button key="submit" type="primary" loading={loading} onClick={() => form.submit()}>
+          {isEditing ? 'حفظ التغييرات' : 'إضافة الدفعة'}
+        </Button>,
       ]}
       width={720}
       style={{ top: 20 }}
@@ -116,27 +141,31 @@ const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, vis
         form={form}
         layout="vertical"
         name="payment_form"
-        initialValues={paymentData}
         onFinish={handleSubmit}
         style={{ marginBottom: 24 }}
       >
         <Form.Item label="العقد" name="contract_id" rules={[{ required: true, message: 'اختر العقد' }]}>
-          <Select placeholder="اختر عقد">
+          <Select placeholder="اختر عقد" onChange={handleContractChange}>
             {contracts.map(c => (
               <Option key={c.id} value={c.id}>
-                {c.ejar_contract_number ? `${c.ejar_contract_number} (${c.id})` : c.id}
+                {c.ejar_contract_number ? `${c.ejar_contract_number} (${c.id.slice(0, 6)})` : c.id.slice(0, 6)}
               </Option>
             ))}
           </Select>
         </Form.Item>
-        <Form.Item label="المبلغ" name="amount" rules={[{ required: true, type: 'number', min: 0, message: 'قيمة صالحة' }]}>
-          <Input type="number" placeholder="المبلغ" style={{ borderRadius: 8 }} />
+        <Form.Item label="المبلغ" name="amount" rules={[{ required: true, message: 'أدخل المبلغ' }]}>
+          <InputNumber
+            style={{ width: '100%', borderRadius: 8 }}
+            placeholder="المبلغ"
+            min={0}
+            onChange={handleAmountChange}
+          />
         </Form.Item>
-        <Form.Item label="قيمة الضريبة (VAT)" name="vat_amount" rules={[{ required: true, type: 'number', min: 0, message: 'قيمة ضريبة صالحة' }]}>
-          <Input type="number" placeholder="قيمة الضريبة" style={{ borderRadius: 8 }} />
+        <Form.Item label="قيمة الضريبة (VAT)" name="vat_amount">
+          <InputNumber style={{ width: '100%', borderRadius: 8 }} placeholder="قيمة الضريبة" min={0} disabled />
         </Form.Item>
-        <Form.Item label="المجموع بعد الضريبة" name="total_amount" rules={[{ required: true, type: 'number', min: 0, message: 'المجموع صالحة' }]}>
-          <Input type="number" placeholder="المجموع" style={{ borderRadius: 8 }} />
+        <Form.Item label="المجموع بعد الضريبة" name="total_amount" rules={[{ required: true, message: 'المجموع مطلوب' }]}>
+          <InputNumber style={{ width: '100%', borderRadius: 8 }} placeholder="المجموع" min={0} disabled />
         </Form.Item>
         <Form.Item label="تاريخ الاستحقاق" name="due_date" rules={[{ required: true, message: 'اختر تاريخ الاستحقاق' }]}>
           <DatePicker style={{ width: '100%' }} />
@@ -162,7 +191,7 @@ const AddEditPayment: React.FC<AddEditPaymentProps> = ({ paymentId, onClose, vis
           <Input placeholder="رقم المرجع سداد (إن وجد)" style={{ borderRadius: 8 }} />
         </Form.Item>
         <Form.Item label="رقم الفاتورة" name="invoice_number">
-          <Input placeholder="رقم الفاتورة" style={{ borderRadius: 8 }} />
+          <Input placeholder="الفاتورة (تلقائي للجديد)" style={{ borderRadius: 8 }} />
         </Form.Item>
       </Form>
     </Modal>

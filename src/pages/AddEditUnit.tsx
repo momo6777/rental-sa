@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Select, Upload, Button, message, Modal } from 'antd';
+import { Form, Input, InputNumber, Select, Upload, Button, message, Modal, Checkbox } from 'antd';
 import { PlusOutlined, CameraOutlined, FileTextOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
@@ -10,11 +10,12 @@ const { Dragger } = Upload;
 
 type AddEditUnitProps = {
   unitId?: string;
+  initialPropertyId?: string;
   onClose: () => void;
   visible: boolean;
 };
 
-const AddEditUnit = ({ unitId, onClose, visible }: AddEditUnitProps) => {
+const AddEditUnit = ({ unitId, initialPropertyId, onClose, visible }: AddEditUnitProps) => {
   const { user } = useAuth();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -36,7 +37,10 @@ const AddEditUnit = ({ unitId, onClose, visible }: AddEditUnitProps) => {
     if (unitId) {
       fetchUnitDetails();
     }
-  }, [unitId]);
+    if (initialPropertyId) {
+      form.setFieldValue('property_id', initialPropertyId);
+    }
+  }, [unitId, initialPropertyId]);
 
   const fetchProperties = async () => {
     try {
@@ -65,6 +69,7 @@ const AddEditUnit = ({ unitId, onClose, visible }: AddEditUnitProps) => {
       if (error) throw error;
       
       setUnitData(data);
+      form.setFieldsValue(data);
     } catch (error) {
       console.error('Error fetching unit details:', error);
       message.error('فشل تحميل بيانات الوحدة');
@@ -77,19 +82,25 @@ const AddEditUnit = ({ unitId, onClose, visible }: AddEditUnitProps) => {
     try {
       setLoading(true);
       
+      const { image_file, ...dbValues } = values;
+      
       let result;
       if (unitId) {
         result = await supabase
           .from('units')
-          .update(values)
+          .update(dbValues)
           .eq('id', unitId);
       } else {
         result = await supabase
           .from('units')
-          .insert([values]);
+          .insert([dbValues]);
       }
       
       if (result.error) throw result.error;
+
+      if (!unitId) {
+        await supabase.rpc('increment_property_units', { prop_id: values.property_id });
+      }
       
       message.success(unitId ? 'تم تعديل الوحدة بنجاح' : 'تم إضافة الوحدة بنجاح');
       onClose();
@@ -116,7 +127,7 @@ const AddEditUnit = ({ unitId, onClose, visible }: AddEditUnitProps) => {
   return (
     <Modal
       title={unitId ? 'تعديل الوحدة' : 'إضافة وحدة جديدة'}
-      visible={true}
+      visible={visible}
       onCancel={onClose}
       footer={[
         <Button key="back" onClick={onClose}>
@@ -167,10 +178,9 @@ const AddEditUnit = ({ unitId, onClose, visible }: AddEditUnitProps) => {
           label="الطابق"
           name="floor"
         >
-          <Input
-            type="number"
+          <InputNumber
             placeholder="أدخل رقم الطابق (اختياري)"
-            style={{ borderRadius: 8 }}
+            style={{ width: '100%', borderRadius: 8 }}
           />
         </Form.Item>
 
@@ -179,10 +189,10 @@ const AddEditUnit = ({ unitId, onClose, visible }: AddEditUnitProps) => {
           name="area_sqm"
           rules={[{ required: true, type: 'number', min: 0, message: 'يرجى إدخال المساحة (رقم أكبر من أو يساوي صفر)' }]}
         >
-          <Input
-            type="number"
+          <InputNumber
+            min={0}
             placeholder="أدخل المساحة بالمتر المربع"
-            style={{ borderRadius: 8 }}
+            style={{ width: '100%', borderRadius: 8 }}
           />
         </Form.Item>
 
@@ -216,10 +226,10 @@ const AddEditUnit = ({ unitId, onClose, visible }: AddEditUnitProps) => {
           name="rent_price"
           rules={[{ required: true, type: 'number', min: 0, message: 'يرجى إدخال الإيجار (رقم أكبر من أو يساوي صفر)' }]}
         >
-          <Input
-            type="number"
+          <InputNumber
+            min={0}
             placeholder="أدخل الإيجار الشهري"
-            style={{ borderRadius: 8 }}
+            style={{ width: '100%', borderRadius: 8 }}
           />
         </Form.Item>
 

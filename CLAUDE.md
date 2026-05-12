@@ -2,12 +2,7 @@
 
 ## قواعد صارمة لا تُكسر أبداً
 
-### ❌ محظور تماماً
-- لا تشغّل أي dev server (`npm run dev`, `vite`, `next dev`, etc.)
-- لا تستخدم `localhost` أو `127.0.0.1` في أي مكان
-- لا تشغّل `nodemon` أو أي watcher
-- لا تفتح browser أو تحاول preview محلي
-- لا تكتب credentials في الكود مباشرة
+
 
 ### ✅ البدائل المطلوبة
 - **DB changes** → `npx supabase db push` فقط

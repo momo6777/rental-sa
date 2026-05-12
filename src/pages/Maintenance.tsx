@@ -1,15 +1,8 @@
 import { useEffect, useState } from 'react';
-import {
-  Table, Button, Space, Tag, Popconfirm, Spin, Input, Select, message, Modal, Form, Upload,
-  Image,
-} from 'antd';
-import {
-  PlusOutlined, EditOutlined, DeleteOutlined, ToolOutlined,
-  UploadOutlined, SearchOutlined,
-} from '@ant-design/icons';
+import { Modal, Form, Input, Select, Upload, message } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import styles from './Maintenance.module.css';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -18,6 +11,32 @@ const STATUS_FLOW: Record<string, string[]> = {
   open: ['in_progress'],
   in_progress: ['completed'],
   completed: [],
+};
+
+const priorityColors: Record<string, string> = {
+  low: 'bg-emerald-100 text-emerald-600 border-emerald-200',
+  medium: 'bg-blue-100 text-blue-600 border-blue-200',
+  high: 'bg-orange-100 text-orange-600 border-orange-200',
+  urgent: 'bg-red-100 text-red-600 border-red-200',
+};
+
+const priorityLabels: Record<string, string> = {
+  low: 'منخفضة',
+  medium: 'متوسطة',
+  high: 'عالية',
+  urgent: 'عاجلة',
+};
+
+const statusColors: Record<string, string> = {
+  open: 'bg-amber-100 text-amber-600 border-amber-200',
+  in_progress: 'bg-blue-100 text-blue-600 border-blue-200',
+  completed: 'bg-emerald-100 text-emerald-600 border-emerald-200',
+};
+
+const statusLabels: Record<string, string> = {
+  open: 'مفتوح',
+  in_progress: 'قيد التنفيذ',
+  completed: 'مكتمل',
 };
 
 const MaintenancePage = () => {
@@ -105,6 +124,7 @@ const MaintenancePage = () => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!window.confirm('حذف الطلب؟')) return;
     try {
       const { error } = await supabase.from('maintenance_requests').delete().eq('id', id);
       if (error) throw error;
@@ -180,133 +200,160 @@ const MaintenancePage = () => {
     }
   };
 
-  const columns = [
-    {
-      title: 'الطلب', dataIndex: 'title', key: 'title',
-      render: (text: string, record: any) => (
-        <span>
-          <strong style={{ color: '#fff' }}>{text}</strong>
-          <br />
-          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
-            وحدة {record.unit?.unit_number || '-'}
-            {' | '}
-            {record.unit?.property?.name_ar || '-'}
-          </span>
-        </span>
-      ),
-    },
-    {
-      title: 'الأولوية', dataIndex: 'priority', key: 'priority',
-      render: (p: string) => {
-        const colors: Record<string, string> = { low: 'green', medium: 'blue', high: 'orange', urgent: 'red' };
-        const labels: Record<string, string> = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', urgent: 'عاجلة' };
-        return <Tag color={colors[p] || 'default'}>{labels[p] || p}</Tag>;
-      },
-    },
-    {
-      title: 'الحالة', dataIndex: 'status', key: 'status',
-      render: (s: string, record: any) => {
-        const colors: Record<string, string> = { open: 'orange', in_progress: 'processing', completed: 'green' };
-        const labels: Record<string, string> = { open: 'مفتوح', in_progress: 'قيد التنفيذ', completed: 'مكتمل' };
-        const nextSteps = STATUS_FLOW[s] || [];
-        return (
-          <Space>
-            <Tag color={colors[s] || 'default'}>{labels[s] || s}</Tag>
-            {isAdmin && nextSteps.length > 0 && (
-              <Button
-                size="small"
-                onClick={() => handleStatusChange(record, nextSteps[0])}
-              >
-                {s === 'open' ? 'بدء التنفيذ' : 'إكمال'}
-              </Button>
-            )}
-          </Space>
-        );
-      },
-    },
-    {
-      title: 'التكلفة', dataIndex: 'cost', key: 'cost',
-      render: (cost: number) => cost ? `ر.س ${cost.toLocaleString()}` : '-',
-    },
-    {
-      title: 'تاريخ الإنشاء', dataIndex: 'created_at', key: 'created_at',
-      render: (d: string) => d ? new Date(d).toLocaleDateString('ar-SA') : '-',
-    },
-    {
-      title: 'الصورة', dataIndex: 'image_url', key: 'image_url',
-      render: (url: string) => url ? (
-        <Image src={url} width={60} height={60} style={{ borderRadius: 4, objectFit: 'cover' }} />
-      ) : '-',
-    },
-    {
-      title: 'الإجراءات', key: 'actions',
-      render: (_: any, record: any) => (
-        <Space>
-          {isAdmin && (
-            <>
-              <Button size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
-              <Popconfirm title="حذف الطلب؟" onConfirm={() => handleDelete(record.id)} okText="نعم" cancelText="لا">
-                <Button size="small" danger icon={<DeleteOutlined />} />
-              </Popconfirm>
-            </>
-          )}
-        </Space>
-      ),
-    },
-  ];
-
   return (
-    <div className={styles.maintenancePage}>
-      <div className={styles.pageHeader}>
-        <h1>إدارة طلبات الصيانة</h1>
-        <Space wrap>
-          <Input.Search
-            placeholder="بحث..."
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-end justify-between flex-wrap gap-4">
+        <div>
+          <h2 className="font-headline-lg text-headline-lg font-bold text-primary">إدارة طلبات الصيانة</h2>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-1">متابعة طلبات الصيانة وإدارتها</p>
+        </div>
+        <div className="flex gap-3 flex-wrap">
+          <input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: 200 }}
+            placeholder="بحث..."
+            className="bg-white border border-outline-variant rounded-xl px-4 py-2 font-label-md focus:ring-primary w-48"
           />
-          <Select
-            placeholder="الحالة"
-            allowClear
-            style={{ width: 130 }}
-            value={statusFilter || undefined}
-            onChange={(v) => setStatusFilter(v || '')}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-white border border-outline-variant rounded-xl px-4 py-2 font-label-md text-on-surface-variant focus:ring-primary"
           >
-            <Option value="open">مفتوح</Option>
-            <Option value="in_progress">قيد التنفيذ</Option>
-            <Option value="completed">مكتمل</Option>
-          </Select>
-          <Select
-            placeholder="الأولوية"
-            allowClear
-            style={{ width: 130 }}
-            value={priorityFilter || undefined}
-            onChange={(v) => setPriorityFilter(v || '')}
+            <option value="">كل الحالات</option>
+            <option value="open">مفتوح</option>
+            <option value="in_progress">قيد التنفيذ</option>
+            <option value="completed">مكتمل</option>
+          </select>
+          <select
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            className="bg-white border border-outline-variant rounded-xl px-4 py-2 font-label-md text-on-surface-variant focus:ring-primary"
           >
-            <Option value="urgent">عاجلة</Option>
-            <Option value="high">عالية</Option>
-            <Option value="medium">متوسطة</Option>
-            <Option value="low">منخفضة</Option>
-          </Select>
+            <option value="">كل الأولويات</option>
+            <option value="urgent">عاجلة</option>
+            <option value="high">عالية</option>
+            <option value="medium">متوسطة</option>
+            <option value="low">منخفضة</option>
+          </select>
           {isAdmin && (
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>إضافة طلب</Button>
+            <button
+              onClick={handleAdd}
+              className="bg-primary text-on-primary px-4 py-2 rounded-xl font-label-md flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              إضافة طلب
+            </button>
           )}
-        </Space>
+        </div>
       </div>
 
+      {/* Loading */}
       {loading ? (
-        <div className={styles.loadingContainer}><Spin tip="جاري التحميل..." /></div>
+        <div className="flex items-center justify-center h-40">
+          <div className="animate-pulse flex flex-col items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/20"></div>
+            <div className="h-3 w-32 bg-surface-container-highest rounded"></div>
+          </div>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-xl border border-outline-variant p-12 text-center">
+          <span className="material-symbols-outlined text-5xl text-outline-variant mb-4">build</span>
+          <p className="text-on-surface-variant">لا توجد طلبات صيانة مطابقة</p>
+        </div>
       ) : (
-        <Table
-          columns={columns}
-          dataSource={filtered}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: 'max-content' }}
-        />
+        <div className="bg-white rounded-xl border border-outline-variant overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-right">
+              <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
+                <tr>
+                  <th className="px-6 py-4 font-bold">الطلب</th>
+                  <th className="px-6 py-4 font-bold">الأولوية</th>
+                  <th className="px-6 py-4 font-bold">الحالة</th>
+                  <th className="px-6 py-4 font-bold">التكلفة</th>
+                  <th className="px-6 py-4 font-bold">تاريخ الإنشاء</th>
+                  <th className="px-6 py-4 font-bold">الصورة</th>
+                  <th className="px-6 py-4 font-bold text-left">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant">
+                {filtered.map((r) => (
+                  <tr key={r.id} className="hover:bg-surface-container-lowest transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-on-surface">{r.title}</div>
+                      <div className="text-label-sm text-on-surface-variant mt-0.5">
+                        وحدة {r.unit?.unit_number || '-'}
+                        {' | '}
+                        {r.unit?.property?.name_ar || '-'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${priorityColors[r.priority] || ''}`}>
+                        {priorityLabels[r.priority] || r.priority}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusColors[r.status] || ''}`}>
+                          {statusLabels[r.status] || r.status}
+                        </span>
+                        {isAdmin && (STATUS_FLOW[r.status]?.length > 0) && (
+                          <button
+                            onClick={() => handleStatusChange(r, STATUS_FLOW[r.status][0])}
+                            className="text-label-sm text-primary hover:text-primary-container transition-colors font-bold"
+                          >
+                            {r.status === 'open' ? 'بدء التنفيذ' : 'إكمال'}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-on-surface-variant">
+                      {r.cost ? `ر.س ${r.cost.toLocaleString()}` : '-'}
+                    </td>
+                    <td className="px-6 py-4 text-on-surface-variant">
+                      {r.created_at ? new Date(r.created_at).toLocaleDateString('ar-SA') : '-'}
+                    </td>
+                    <td className="px-6 py-4">
+                      {r.image_url ? (
+                        <img
+                          src={r.image_url}
+                          alt="صورة"
+                          className="w-14 h-14 rounded-lg object-cover border border-outline-variant"
+                        />
+                      ) : '-'}
+                    </td>
+                    <td className="px-6 py-4 text-left">
+                      {isAdmin && (
+                        <div className="flex gap-1 justify-end">
+                          <button
+                            onClick={() => handleEdit(r)}
+                            className="p-2 text-on-surface-variant hover:text-primary transition-colors"
+                            title="تعديل"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">edit</span>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(r.id)}
+                            className="p-2 text-on-surface-variant hover:text-error transition-colors"
+                            title="حذف"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-6 py-4 border-t border-outline-variant bg-surface-container-low/50">
+            <p className="text-body-sm text-on-surface-variant">عرض {filtered.length} من أصل {requests.length} طلب</p>
+          </div>
+        </div>
       )}
 
+      {/* Add/Edit Modal */}
       <Modal
         title={editingRequest ? 'تعديل طلب صيانة' : 'إضافة طلب صيانة'}
         open={modalVisible}
@@ -314,6 +361,7 @@ const MaintenancePage = () => {
         onOk={() => form.submit()}
         confirmLoading={saving}
         width={640}
+        style={{ top: 40 }}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item name="unit_id" label="الوحدة" rules={[{ required: true, message: 'اختر الوحدة' }]}>
@@ -359,7 +407,14 @@ const MaintenancePage = () => {
             showUploadList={false}
             beforeUpload={(file) => { handleUploadImage(file); return false; }}
           >
-            <Button icon={<UploadOutlined />} loading={uploading}>رفع صورة</Button>
+            <button
+              type="button"
+              disabled={uploading}
+              className="border border-outline-variant rounded-xl px-4 py-2 font-label-md flex items-center gap-2 hover:bg-surface-container-low transition-colors disabled:opacity-50"
+            >
+              <UploadOutlined />
+              {uploading ? 'جاري الرفع...' : 'رفع صورة'}
+            </button>
           </Upload>
         </Form>
       </Modal>

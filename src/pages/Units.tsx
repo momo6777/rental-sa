@@ -1,42 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Select, Space, Typography, Tag, Spin, Modal, Popconfirm } from 'antd';
-import { SearchOutlined, FilterFilled, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import { message } from 'antd';
 import AddEditUnit from './AddEditUnit';
-import styles from './Units.module.css';
-
-const { Text } = Typography;
-const { Option } = Select;
 
 const UnitsPage = () => {
   const { user } = useAuth();
-  const [units, setUnits] = useState([]);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [units, setUnits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [propertyFilter, setPropertyFilter] = useState('all'); // all property IDs or 'all'
-  const [statusFilter, setStatusFilter] = useState('all'); // all, available, rented, maintenance
-  const [filteredUnits, setFilteredUnits] = useState([]);
-  const [properties, setProperties] = useState([]);
-  const [selectedUnit, setSelectedUnit] = useState(null);
+  const [propertyFilter, setPropertyFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [filteredUnits, setFilteredUnits] = useState<any[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [selectedUnit, setSelectedUnit] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     fetchProperties();
     fetchUnits();
+    const propId = searchParams.get('property_id');
+    if (propId) {
+      setPropertyFilter(propId);
+      setModalVisible(true);
+    }
   }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [searchTerm, propertyFilter, statusFilter, units]);
 
   const fetchProperties = async () => {
     try {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('id, name_ar')
-        .order('name_ar');
-      
+      const { data, error } = await supabase.from('properties').select('id, name_ar').order('name_ar');
       if (error) throw error;
-      
-      setProperties(data);
+      setProperties(data || []);
     } catch (error) {
       console.error('Error fetching properties:', error);
     }
@@ -47,18 +48,11 @@ const UnitsPage = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('units')
-        .select(`
-          *,
-          properties!inner (
-            name_ar
-          )
-        `)
+        .select('*, properties!inner(name_ar)')
         .order('created_at', { ascending: false });
-      
       if (error) throw error;
-      
-      setUnits(data);
-      setFilteredUnits(data);
+      setUnits(data || []);
+      setFilteredUnits(data || []);
     } catch (error) {
       console.error('Error fetching units:', error);
     } finally {
@@ -66,303 +60,218 @@ const UnitsPage = () => {
     }
   };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    applyFilters();
-  };
-
-  const handlePropertyFilterChange = (value: string) => {
-    setPropertyFilter(value);
-    applyFilters();
-  };
-
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
-    applyFilters();
-  };
-
   const applyFilters = () => {
     let filtered = [...units];
-    
-    // Apply search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(unit => 
-        unit.unit_number.toLowerCase().includes(term) || 
-        unit.properties.name_ar.toLowerCase().includes(term) ||
-        (unit.properties.name_en && unit.properties.name_en.toLowerCase().includes(term))
+      filtered = filtered.filter(
+        (u) =>
+          u.unit_number.toLowerCase().includes(term) ||
+          u.properties.name_ar.toLowerCase().includes(term)
       );
     }
-    
-    // Apply property filter
     if (propertyFilter !== 'all') {
-      filtered = filtered.filter(unit => unit.property_id === propertyFilter);
+      filtered = filtered.filter((u) => u.property_id === propertyFilter);
     }
-    
-    // Apply status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(unit => unit.status === statusFilter);
+      filtered = filtered.filter((u) => u.status === statusFilter);
     }
-    
     setFilteredUnits(filtered);
   };
 
-  const handleAddUnit = () => {
-    setSelectedUnit(null);
-    setIsEditing(false);
-    setModalVisible(true);
-  };
-
-  const handleEditUnit = (unit: any) => {
+  const handleEdit = (unit: any) => {
     setSelectedUnit(unit);
-    setIsEditing(true);
     setModalVisible(true);
   };
 
-  const handleViewUnit = (unit: any) => {
-    setSelectedUnit(unit);
-    setIsEditing(false);
-    setModalVisible(true);
-  };
-
-  const handleDeleteUnit = async (unitId: string) => {
+  const handleDelete = async (unit: any) => {
+    if (!window.confirm(`حذف الوحدة ${unit.unit_number}؟`)) return;
     try {
-      // Check if unit is rented before allowing deletion
-      const { data: unitData, error: unitError } = await supabase
-        .from('units')
-        .select('status')
-        .eq('id', unitId)
-        .single();
-      
-      if (unitError) throw unitError;
-      
-      if (unitData.status === 'rented') {
-        message.error('لا يمكن حذف الوحدة المؤجرة. يجب إنهاء العقد أولًا.');
-        return;
-      }
-      
-      const { error } = await supabase
-        .from('units')
-        .delete()
-        .eq('id', unitId);
-      
+      const { error } = await supabase.from('units').delete().eq('id', unit.id);
       if (error) throw error;
-      
-      message.success('تم حذف الوحدة بنجاح');
+      await supabase.rpc('decrement_property_units', { prop_id: unit.property_id });
       fetchUnits();
-    } catch (error: any) {
-      console.error('Error deleting unit:', error);
-      message.error(error.message || 'فشل حذف الوحدة');
+    } catch (err: any) {
+      console.error('Error deleting unit', err);
+      message.error(err.message || 'فشل حذف الوحدة');
     }
   };
 
   const handleModalClose = () => {
     setModalVisible(false);
     setSelectedUnit(null);
+    fetchUnits();
   };
 
-  const columns = [
-    {
-      title: 'رقم الوحدة',
-      dataIndex: 'unit_number',
-      key: 'unit_number'
-    },
-    {
-      title: 'العقار',
-      dataIndex: 'properties.name_ar',
-      key: 'property_name'
-    },
-    {
-      title: 'الطابق',
-      dataIndex: 'floor',
-      key: 'floor',
-      render: (value: number | null) => value !== null ? <Text>{value}</Text> : <Text>-</Text>
-    },
-    {
-      title: 'المساحة (م²)',
-      dataIndex: 'area_sqm',
-      key: 'area_sqm',
-      render: (value: number) => <Text>{value.toFixed(2)}</Text>
-    },
-    {
-      title: 'النوع',
-      dataIndex: 'type',
-      key: 'type',
-      render: (text: 'apartment' | 'office' | 'shop' | 'villa') => {
-        const typeMap: Record<string, string> = {
-          apartment: 'شقة',
-          office: 'مكتب',
-          shop: 'محل',
-          villa: 'فيلا'
-        };
-        return <Text>{typeMap[text] || text}</Text>;
-      }
-    },
-    {
-      title: 'الحالة',
-      dataIndex: 'status',
-      key: 'status',
-      render: (text: 'available' | 'rented' | 'maintenance') => {
-        let color: string;
-        let label: string;
-        
-        switch (text) {
-          case 'available':
-            color = 'green';
-            label = 'متاح';
-            break;
-          case 'rented':
-            color = 'blue';
-            label = 'مؤجرة';
-            break;
-          case 'maintenance':
-            color = 'orange';
-            label = 'تحت الصيانة';
-            break;
-          default:
-            color = 'grey';
-            label = text;
-        }
-        
-        return <Tag color={color}>{label}</Tag>;
-      }
-    },
-    {
-      title: 'الإيجار (ر.س)',
-      dataIndex: 'rent_price',
-      key: 'rent_price',
-      render: (value: number) => <Text>{value.toLocaleString()}</Text>
-    },
-    {
-      title: 'تاريخ الإضافة',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: (date: string) => {
-        const options: Intl.DateTimeFormatOptions = { 
-          year: 'numeric', month: 'short', day: 'numeric' 
-        };
-        return new Date(date).toLocaleDateString('ar-SA', options);
-      }
-    },
-    {
-      title: 'الإجراءات',
-      dataIndex: 'id',
-      key: 'actions',
-      render: (_: string, record: any) => (
-        <Space size="middle">
-          <Button 
-            size="small" 
-            icon={<EyeOutlined />} 
-            title="عرض التفاصيل"
-            onClick={() => handleViewUnit(record)}
-          />
-          {user?.role === 'admin' && (
-            <>
-              <Popconfirm
-                title="هل أنت متأكد من حذف هذه الوحدة؟"
-                onConfirm={() => handleDeleteUnit(record.id)}
-                okText="نعم"
-                cancelText="لا"
-              >
-                <Button 
-                  size="small" 
-                  icon={<DeleteOutlined />} 
-                  danger
-                  title="حذف الوحدة"
-                />
-              </Popconfirm>
-              <Button 
-                size="small" 
-                style={{ margin: '0 4px' }}
-                icon={<EditOutlined />} 
-                title="تعديل الوحدة"
-                onClick={() => handleEditUnit(record)}
-              />
-            </>
-          )}
-        </Space>
-      )
-    }
-  ];
+  const statusBadge: Record<string, string> = {
+    available: 'bg-secondary/10 text-secondary border-secondary/20',
+    rented: 'bg-primary/10 text-primary border-primary/20',
+    maintenance: 'bg-amber-100 text-amber-700 border-amber-200',
+  };
+  const statusLabel: Record<string, string> = {
+    available: 'متاح',
+    rented: 'مؤجرة',
+    maintenance: 'تحت الصيانة',
+  };
+  const typeLabel: Record<string, string> = {
+    apartment: 'شقة',
+    office: 'مكتب',
+    shop: 'محل',
+    villa: 'فيلا',
+  };
 
   return (
-    <div className={styles.unitsPage}>
-      <div className={styles.pageHeader}>
-        <h1>إدارة الوحدات</h1>
-        <div className={styles.headerActions}>
-          <Space>
-            <Select 
-              placeholder="جميع العقارات"
-              value={propertyFilter}
-              onChange={handlePropertyFilterChange}
-              style={{ width: 200 }}
-            >
-              <Option value="all">جميع العقارات</Option>
-              {properties.map(prop => (
-                <Option key={prop.id} value={prop.id}>
-                  {prop.name_ar}
-                </Option>
-              ))}
-            </Select>
-            
-            <Select 
-              placeholder="جميع الحالات"
-              value={statusFilter}
-              onChange={handleStatusFilterChange}
-              style={{ width: 120 }}
-            >
-              <Option value="all">جميع الحالات</Option>
-              <Option value="available">متاح</Option>
-              <Option value="rented">مؤجرة</Option>
-              <Option value="maintenance">تحت الصيانة</Option>
-            </Select>
-            
-            <Input.Search 
-              placeholder="ابحث بالرقم أو العقار..."
-              value={searchTerm}
-              onChange={handleSearch}
-              style={{ width: 240 }}
-            />
-            
-            {user?.role === 'admin' && (
-              <Button 
-                type="primary" 
-                icon={<PlusOutlined />}
-                onClick={handleAddUnit}
-              >
-                إضافة وحدة
-              </Button>
-            )}
-          </Space>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h2 className="font-headline-lg text-headline-lg font-bold text-primary">إدارة الوحدات</h2>
+          <p className="text-on-surface-variant font-body-md">إدارة {units.length} وحدة عقارية</p>
         </div>
-      </div>
-      
-      {loading ? (
-        <div className={styles.loadingContainer}>
-          <Spin tip="جاري تحميل الوحدات..." />
-        </div>
-      ) : filteredUnits.length === 0 ? (
-        <div className={styles.emptyState}>
-          <p>لا توجد وحدات تطابق معايير البحث</p>
+        <div className="flex flex-wrap gap-3">
+          <select
+            value={propertyFilter}
+            onChange={(e) => setPropertyFilter(e.target.value)}
+            className="bg-white border border-outline-variant rounded-xl px-4 py-2 font-label-md focus:ring-primary"
+          >
+            <option value="all">جميع العقارات</option>
+            {properties.map((p) => (
+              <option key={p.id} value={p.id}>{p.name_ar}</option>
+            ))}
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-white border border-outline-variant rounded-xl px-4 py-2 font-label-md focus:ring-primary"
+          >
+            <option value="all">جميع الحالات</option>
+            <option value="available">متاح</option>
+            <option value="rented">مؤجرة</option>
+            <option value="maintenance">تحت الصيانة</option>
+          </select>
+          <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="بحث..."
+            className="bg-white border border-outline-variant rounded-xl px-4 py-2 font-label-md focus:ring-primary w-44"
+          />
           {user?.role === 'admin' && (
-            <Button type="primary" onClick={handleAddUnit}>
-              إضافة أول وحدة
-            </Button>
+            <button
+              onClick={() => { setSelectedUnit(null); setModalVisible(true); }}
+              className="bg-primary text-on-primary px-4 py-2 rounded-xl font-label-md flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              إضافة وحدة
+            </button>
           )}
         </div>
+      </div>
+
+      {/* Quick stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+        <div className="bg-white p-4 rounded-xl border border-outline-variant flex items-center gap-4">
+          <span className="p-3 bg-secondary/10 text-secondary rounded-lg material-symbols-outlined">check_circle</span>
+          <div>
+            <p className="text-label-sm text-on-surface-variant">متاح</p>
+            <p className="font-headline-md font-bold">{units.filter((u) => u.status === 'available').length}</p>
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-outline-variant flex items-center gap-4">
+          <span className="p-3 bg-primary/10 text-primary rounded-lg material-symbols-outlined">home</span>
+          <div>
+            <p className="text-label-sm text-on-surface-variant">مؤجرة</p>
+            <p className="font-headline-md font-bold">{units.filter((u) => u.status === 'rented').length}</p>
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-outline-variant flex items-center gap-4">
+          <span className="p-3 bg-amber-100 text-amber-700 rounded-lg material-symbols-outlined">build</span>
+          <div>
+            <p className="text-label-sm text-on-surface-variant">تحت الصيانة</p>
+            <p className="font-headline-md font-bold">{units.filter((u) => u.status === 'maintenance').length}</p>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center h-40">
+          <div className="animate-pulse flex flex-col items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/20"></div>
+            <div className="h-3 w-32 bg-surface-container-highest rounded"></div>
+          </div>
+        </div>
+      ) : filteredUnits.length === 0 ? (
+        <div className="bg-white rounded-xl border border-outline-variant p-12 text-center">
+          <span className="material-symbols-outlined text-5xl text-outline-variant mb-4">home_work</span>
+          <p className="text-on-surface-variant">لا توجد وحدات مطابقة</p>
+        </div>
       ) : (
-        <Table 
-          columns={columns} 
-          dataSource={filteredUnits}
-          pagination={{ pageSize: 10 }}
-          rowKey="id"
-          scroll={{ x: 'max-content' }}
-        />
+        <div className="bg-white rounded-xl border border-outline-variant overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-right">
+              <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
+                <tr>
+                  <th className="px-6 py-4 font-bold">رقم الوحدة</th>
+                  <th className="px-6 py-4 font-bold">العقار</th>
+                  <th className="px-6 py-4 font-bold">النوع</th>
+                  <th className="px-6 py-4 font-bold">الطابق</th>
+                  <th className="px-6 py-4 font-bold">المساحة</th>
+                  <th className="px-6 py-4 font-bold">الإيجار</th>
+                  <th className="px-6 py-4 font-bold">الحالة</th>
+                  {user?.role === 'admin' && <th className="px-6 py-4 font-bold text-left">إجراءات</th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant">
+                {filteredUnits.map((unit) => (
+                  <tr key={unit.id} className="hover:bg-surface-container-lowest transition-colors">
+                    <td className="px-6 py-4 font-bold">{unit.unit_number}</td>
+                    <td className="px-6 py-4 text-on-surface-variant">{unit.properties?.name_ar || '-'}</td>
+                    <td className="px-6 py-4">
+                      <span className="bg-surface-container px-3 py-1 rounded-lg text-label-sm">
+                        {typeLabel[unit.type] || unit.type}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-on-surface-variant">{unit.floor ?? '-'}</td>
+                    <td className="px-6 py-4 text-on-surface-variant">{unit.area_sqm ? `${unit.area_sqm} م²` : '-'}</td>
+                    <td className="px-6 py-4 font-bold text-primary">{unit.rent_price?.toLocaleString()} ر.س</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-label-sm font-bold border ${statusBadge[unit.status] || 'bg-surface-container text-on-surface-variant'}`}>
+                        {statusLabel[unit.status] || unit.status}
+                      </span>
+                    </td>
+                    {user?.role === 'admin' && (
+                      <td className="px-6 py-4 text-left">
+                        <div className="flex gap-1 justify-end">
+                          <button
+                            onClick={() => handleEdit(unit)}
+                            className="p-2 text-on-surface-variant hover:text-primary transition-colors"
+                            title="تعديل"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">edit</span>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(unit)}
+                            className="p-2 text-on-surface-variant hover:text-error transition-colors"
+                            title="حذف"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="p-4 border-t border-outline-variant flex justify-between items-center bg-surface-container-low/50">
+            <p className="text-body-sm text-on-surface-variant">عرض {filteredUnits.length} من أصل {units.length} وحدة</p>
+          </div>
+        </div>
       )}
-      
-      {/* Add/Edit/View Unit Modal */}
+
       <AddEditUnit
         unitId={selectedUnit?.id || undefined}
+        initialPropertyId={searchParams.get('property_id') || undefined}
         onClose={handleModalClose}
         visible={modalVisible}
       />

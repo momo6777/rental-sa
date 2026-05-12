@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Select, DatePicker, Button, message, Modal, Checkbox } from 'antd';
+import { Form, Input, InputNumber, Select, DatePicker, Button, message, Modal, Checkbox } from 'antd';
 import { PlusOutlined, CameraOutlined, FileTextOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
@@ -82,10 +82,21 @@ const AddEditContract: React.FC<AddEditContractProps> = ({ contractId, onClose, 
     }
   };
 
+  const setUnitAvailableIfNoActiveContracts = async (unitId: string, excludeContractId: string) => {
+    const { count } = await supabase
+      .from('contracts')
+      .select('*', { count: 'exact', head: true })
+      .eq('unit_id', unitId)
+      .eq('status', 'active')
+      .neq('id', excludeContractId);
+    if (count === 0) {
+      await supabase.from('units').update({ status: 'available' }).eq('id', unitId);
+    }
+  };
+
   const handleSubmit = async (values: any) => {
     try {
       setLoading(true);
-      // Convert dayjs objects to ISO strings if needed
       if (values.start_date) {
         values.start_date = values.start_date.format('YYYY-MM-DD');
       }
@@ -93,14 +104,51 @@ const AddEditContract: React.FC<AddEditContractProps> = ({ contractId, onClose, 
         values.end_date = values.end_date.format('YYYY-MM-DD');
       }
 
-      let result;
+      let oldUnitId: string | null = null;
+      let oldStatus: string | null = null;
+
       if (isEditing) {
-        result = await supabase.from('contracts').update(values).eq('id', contractId);
-      } else {
-        result = await supabase.from('contracts').insert([values]);
+        const { data: current } = await supabase
+          .from('contracts')
+          .select('unit_id, status')
+          .eq('id', contractId)
+          .single();
+        if (current) {
+          oldUnitId = current.unit_id;
+          oldStatus = current.status;
+        }
       }
 
-      if (result.error) throw result.error;
+      if (isEditing) {
+        const { error } = await supabase.from('contracts').update(values).eq('id', contractId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('contracts').insert([values]);
+        if (error) throw error;
+      }
+
+      const newUnitId = values.unit_id;
+      const newStatus = values.status;
+
+      if (isEditing) {
+        if (oldUnitId && oldUnitId !== newUnitId) {
+          await setUnitAvailableIfNoActiveContracts(oldUnitId, contractId!);
+          if (newStatus === 'active') {
+            await supabase.from('units').update({ status: 'rented' }).eq('id', newUnitId);
+          }
+        } else if (oldUnitId === newUnitId && oldStatus !== newStatus) {
+          if (newStatus === 'active') {
+            await supabase.from('units').update({ status: 'rented' }).eq('id', newUnitId);
+          } else if (oldStatus === 'active') {
+            await setUnitAvailableIfNoActiveContracts(newUnitId, contractId!);
+          }
+        }
+      } else {
+        if (newStatus === 'active') {
+          await supabase.from('units').update({ status: 'rented' }).eq('id', newUnitId);
+        }
+      }
+
       message.success(isEditing ? 'تم تعديل العقد بنجاح' : 'تم إضافة العقد بنجاح');
       onClose();
     } catch (err: any) {
@@ -165,8 +213,8 @@ const AddEditContract: React.FC<AddEditContractProps> = ({ contractId, onClose, 
           <DatePicker style={{ width: '100%' }} />
         </Form.Item>
 
-        <Form.Item label="قيمة الإيجار" name="rent_amount" rules={[{ required: true, type: 'number', min: 0, message: 'قيم إيجار صالحة' }]}>
-          <Input type="number" placeholder="قيمة الإيجار" style={{ borderRadius: 8 }} />
+        <Form.Item label="قيمة الإيجار" name="rent_amount" rules={[{ required: true, message: 'أدخل قيمة الإيجار' }]}>
+          <InputNumber min={0} placeholder="قيمة الإيجار" style={{ width: '100%', borderRadius: 8 }} />
         </Form.Item>
 
         <Form.Item label="دورية الدفع" name="payment_frequency" rules={[{ required: true, message: 'اختر دورة الدفع' }]}>
@@ -193,8 +241,8 @@ const AddEditContract: React.FC<AddEditContractProps> = ({ contractId, onClose, 
           <Checkbox>تشمل الضريبة</Checkbox>
         </Form.Item>
 
-        <Form.Item label="الضمان (مبلغ)" name="deposit_amount" rules={[{ required: true, type: 'number', min: 0, message: 'مبلغ الضمان صالح' }]}>
-          <Input type="number" placeholder="مبلغ الضمان" style={{ borderRadius: 8 }} />
+        <Form.Item label="الضمان (مبلغ)" name="deposit_amount" rules={[{ required: true, message: 'أدخل مبلغ الضمان' }]}>
+          <InputNumber min={0} placeholder="مبلغ الضمان" style={{ width: '100%', borderRadius: 8 }} />
         </Form.Item>
       </Form>
     </Modal>

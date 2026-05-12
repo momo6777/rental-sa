@@ -1,11 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Tag, Spin, Statistic, Tabs, Empty, Progress } from 'antd';
-import {
-  DollarCircleOutlined, FileTextOutlined, PercentageOutlined,
-  CalculatorOutlined, HomeOutlined, ArrowUpOutlined,
-} from '@ant-design/icons';
 import { supabase } from '../lib/supabase';
-import styles from './Reports.module.css';
 
 interface PaymentWithVAT {
   id: string;
@@ -34,12 +28,19 @@ interface RevenueRow {
 interface OccupancyRow {
   name: string; id: string;
   totalUnits: number; rentedUnits: number; rate: number;
-  topUnit: string; topRevenue: number;
 }
+
+const TABS = [
+  { key: 'vat', label: 'VAT', icon: 'percent' },
+  { key: 'revenue', label: 'الإيرادات', icon: 'payments' },
+  { key: 'occupancy', label: 'الإشغال', icon: 'business' },
+] as const;
+
+type TabKey = typeof TABS[number]['key'];
 
 const ReportsPage = () => {
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('vat');
+  const [activeTab, setActiveTab] = useState<TabKey>('vat');
   const [payments, setPayments] = useState<PaymentWithVAT[]>([]);
   const [monthlyVAT, setMonthlyVAT] = useState<MonthlyVATRow[]>([]);
   const [revenueData, setRevenueData] = useState<RevenueRow[]>([]);
@@ -53,15 +54,13 @@ const ReportsPage = () => {
     try {
       setLoading(true);
 
-      const [payRes, unitsRes, propertiesRes, contractsRes] = await Promise.all([
+      const [payRes, unitsRes, propertiesRes] = await Promise.all([
         supabase.from('payments').select(`
           id, amount, vat_amount, total_amount, due_date, paid_date, status, created_at, invoice_number,
           contract:contracts (unit:units (is_commercial))
         `).not('status', 'eq', 'pending').order('created_at', { ascending: false }),
-
         supabase.from('units').select('id, property_id, status, rent_price, unit_number'),
         supabase.from('properties').select('id, name_ar'),
-        supabase.from('contracts').select('id, unit_id, tenant:tenants(full_name_ar), unit:units(unit_number, property:properties(name_ar))'),
       ]);
 
       if (payRes.error) throw payRes.error;
@@ -125,7 +124,6 @@ const ReportsPage = () => {
         id: propId, name: propMap.get(propId) || '-',
         totalUnits: g.total, rentedUnits: g.rented,
         rate: g.total > 0 ? Math.round((g.rented / g.total) * 1000) / 10 : 0,
-        topUnit: '', topRevenue: 0,
       });
     }
     setOccupancyData(data.sort((a, b) => b.rate - a.rate));
@@ -145,114 +143,273 @@ const ReportsPage = () => {
     totalUnits: a.totalUnits + r.totalUnits, rentedUnits: a.rentedUnits + r.rentedUnits,
   }), { totalUnits: 0, rentedUnits: 0 });
 
-  const vatColumns = [
-    { title: 'الشهر', dataIndex: 'month', key: 'month', render: (t: string) => <span style={{ fontWeight: 500, color: '#fff' }}>{t}</span> },
-    { title: 'خاضع (ر.س)', dataIndex: 'taxableSales', key: 'taxableSales', render: (v: number) => v.toLocaleString() },
-    { title: 'VAT (ر.س)', dataIndex: 'vatCollected', key: 'vatCollected', render: (v: number) => <span style={{ color: '#ffd700', fontWeight: 600 }}>{v.toLocaleString()}</span> },
-    { title: 'معفى (ر.س)', dataIndex: 'exemptSales', key: 'exemptSales', render: (v: number) => v.toLocaleString() },
-    { title: 'إجمالي (ر.س)', dataIndex: 'totalAmount', key: 'totalAmount', render: (v: number) => <span style={{ color: '#52c41a', fontWeight: 600 }}>{v.toLocaleString()}</span> },
-    { title: 'فواتير', dataIndex: 'invoiceCount', key: 'invoiceCount', render: (v: number) => <Tag color="blue">{v}</Tag> },
-  ];
-
-  const revColumns = [
-    { title: 'الشهر', dataIndex: 'month', key: 'month', render: (t: string) => <span style={{ fontWeight: 500, color: '#fff' }}>{t}</span> },
-    { title: 'محصل (ر.س)', dataIndex: 'collected', key: 'collected', render: (v: number) => <span style={{ color: '#52c41a' }}>{v.toLocaleString()}</span> },
-    { title: 'متأخر (ر.س)', dataIndex: 'overdue', key: 'overdue', render: (v: number) => <span style={{ color: v > 0 ? '#ff4d4f' : '#666' }}>{v.toLocaleString()}</span> },
-    { title: 'معلق (ر.س)', dataIndex: 'pending', key: 'pending', render: (v: number) => <span style={{ color: '#fa8c16' }}>{v.toLocaleString()}</span> },
-    { title: 'الإجمالي (ر.س)', dataIndex: 'total', key: 'total', render: (v: number) => <span style={{ color: '#ffd700', fontWeight: 600 }}>{v.toLocaleString()}</span> },
-  ];
-
-  const occColumns = [
-    { title: 'العقار', dataIndex: 'name', key: 'name', render: (t: string) => <span style={{ color: '#fff', fontWeight: 500 }}>{t}</span> },
-    { title: 'الوحدات', dataIndex: 'totalUnits', key: 'totalUnits' },
-    { title: 'مؤجر', dataIndex: 'rentedUnits', key: 'rentedUnits' },
-    { title: 'نسبة الإشغال', dataIndex: 'rate', key: 'rate', render: (v: number) => (
-      <Space>
-        <Progress percent={v} size="small" strokeColor={v >= 80 ? '#52c41a' : v >= 50 ? '#fa8c16' : '#ff4d4f'} trailColor="#333" format={() => `${v}%`} />
-      </Space>
-    )},
-  ];
-
-  if (loading) return <div className={styles.reportsPage}><div className={styles.loadingContainer}><Spin tip="جاري تحميل..." /></div></div>;
-
-  const renderVAT = () => monthlyVAT.length === 0 ? <Empty description="لا توجد بيانات" /> : (
-    <>
-      <div className={styles.gridRow}>
-        <Card className={styles.statCard}><Statistic title="خاضع للضريبة" value={`ر.س ${vatTotals.taxableSales.toLocaleString()}`} prefix={<DollarCircleOutlined style={{ color: '#ffd700' }} />} /></Card>
-        <Card className={styles.statCard}><Statistic title="VAT المحصل" value={`ر.س ${vatTotals.vatCollected.toLocaleString()}`} valueStyle={{ color: '#ffd700' }} prefix={<PercentageOutlined style={{ color: '#ffd700' }} />} /></Card>
-        <Card className={styles.statCard}><Statistic title="معفى من VAT" value={`ر.س ${vatTotals.exemptSales.toLocaleString()}`} valueStyle={{ color: '#52c41a' }} prefix={<CalculatorOutlined style={{ color: '#52c41a' }} />} /></Card>
-        <Card className={styles.statCard}><Statistic title="الفواتير" value={vatTotals.invoiceCount} prefix={<FileTextOutlined style={{ color: '#1890ff' }} />} /></Card>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-primary/20"></div>
+          <div className="h-4 w-40 bg-surface-container-highest rounded"></div>
+        </div>
       </div>
-      <Card className={styles.tableCard} title="التفصيل الشهري">
-        <Table columns={vatColumns} dataSource={monthlyVAT} rowKey="monthKey" pagination={false}
-          summary={() => (
-            <Table.Summary><Table.Summary.Row>
-              <Table.Summary.Cell index={0}><strong style={{ color: '#fff' }}>الإجمالي</strong></Table.Summary.Cell>
-              <Table.Summary.Cell index={1}><strong>{vatTotals.taxableSales.toLocaleString()}</strong></Table.Summary.Cell>
-              <Table.Summary.Cell index={2}><strong style={{ color: '#ffd700' }}>{vatTotals.vatCollected.toLocaleString()}</strong></Table.Summary.Cell>
-              <Table.Summary.Cell index={3}><strong>{vatTotals.exemptSales.toLocaleString()}</strong></Table.Summary.Cell>
-              <Table.Summary.Cell index={4}><strong style={{ color: '#52c41a' }}>{vatTotals.totalAmount.toLocaleString()}</strong></Table.Summary.Cell>
-              <Table.Summary.Cell index={5}><Tag color="gold">{vatTotals.invoiceCount}</Tag></Table.Summary.Cell>
-            </Table.Summary.Row></Table.Summary>
-          )}
-          scroll={{ x: 'max-content' }} />
-      </Card>
-    </>
-  );
+    );
+  }
 
-  const renderRevenue = () => revenueData.length === 0 ? <Empty description="لا توجد بيانات" /> : (
-    <>
-      <div className={styles.gridRow}>
-        <Card className={styles.statCard}><Statistic title="الإيرادات المحصلة" value={`ر.س ${revTotals.collected.toLocaleString()}`} prefix={<DollarCircleOutlined style={{ color: '#52c41a' }} />} /></Card>
-        <Card className={styles.statCard}><Statistic title="المتأخر" value={`ر.س ${revTotals.overdue.toLocaleString()}`} valueStyle={{ color: revTotals.overdue > 0 ? '#ff4d4f' : '#52c41a' }} prefix={<ArrowUpOutlined />} /></Card>
-        <Card className={styles.statCard}><Statistic title="المعلق" value={`ر.س ${revTotals.pending.toLocaleString()}`} valueStyle={{ color: '#fa8c16' }} prefix={<CalculatorOutlined />} /></Card>
-        <Card className={styles.statCard}><Statistic title="الإجمالي" value={`ر.س ${revTotals.total.toLocaleString()}`} valueStyle={{ color: '#ffd700' }} prefix={<FileTextOutlined />} /></Card>
-      </div>
-      <Card className={styles.tableCard} title="الإيرادات الشهرية">
-        <Table columns={revColumns} dataSource={revenueData} rowKey="monthKey" pagination={false}
-          summary={() => (
-            <Table.Summary><Table.Summary.Row>
-              <Table.Summary.Cell index={0}><strong style={{ color: '#fff' }}>الإجمالي</strong></Table.Summary.Cell>
-              <Table.Summary.Cell index={1}><strong style={{ color: '#52c41a' }}>{revTotals.collected.toLocaleString()}</strong></Table.Summary.Cell>
-              <Table.Summary.Cell index={2}><strong style={{ color: revTotals.overdue > 0 ? '#ff4d4f' : '#666' }}>{revTotals.overdue.toLocaleString()}</strong></Table.Summary.Cell>
-              <Table.Summary.Cell index={3}><strong style={{ color: '#fa8c16' }}>{revTotals.pending.toLocaleString()}</strong></Table.Summary.Cell>
-              <Table.Summary.Cell index={4}><strong style={{ color: '#ffd700' }}>{revTotals.total.toLocaleString()}</strong></Table.Summary.Cell>
-            </Table.Summary.Row></Table.Summary>
-          )}
-          scroll={{ x: 'max-content' }} />
-      </Card>
-    </>
-  );
+  const renderVAT = () => {
+    if (monthlyVAT.length === 0) {
+      return (
+        <div className="bg-white rounded-xl border border-outline-variant p-12 text-center">
+          <span className="material-symbols-outlined text-5xl text-outline-variant mb-4">percent</span>
+          <p className="text-on-surface-variant">لا توجد بيانات VAT</p>
+        </div>
+      );
+    }
+    return (
+      <>
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: 'خاضع للضريبة', value: vatTotals.taxableSales, color: 'text-amber-600', icon: 'payments' },
+            { label: 'VAT المحصل', value: vatTotals.vatCollected, color: 'text-amber-600', icon: 'percent' },
+            { label: 'معفى من VAT', value: vatTotals.exemptSales, color: 'text-emerald-600', icon: 'money_off' },
+            { label: 'الفواتير', value: vatTotals.invoiceCount, color: 'text-blue-600', icon: 'description', isCount: true },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white rounded-xl border border-outline-variant p-5 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-3">
+                <span className={`material-symbols-outlined ${stat.color}`}>{stat.icon}</span>
+                <span className="text-label-sm text-on-surface-variant">{stat.label}</span>
+              </div>
+              <div className={`text-headline-md font-bold ${stat.color}`}>
+                {stat.isCount ? stat.value : `ر.س ${stat.value.toLocaleString()}`}
+              </div>
+            </div>
+          ))}
+        </div>
 
-  const renderOccupancy = () => occupancyData.length === 0 ? <Empty description="لا توجد بيانات" /> : (
-    <>
-      <div className={styles.gridRow}>
-        <Card className={styles.statCard}><Statistic title="إجمالي الوحدات" value={occTotals.totalUnits} prefix={<HomeOutlined style={{ color: '#1890ff' }} />} /></Card>
-        <Card className={styles.statCard}><Statistic title="الوحدات المؤجرة" value={occTotals.rentedUnits} valueStyle={{ color: '#52c41a' }} prefix={<HomeOutlined />} /></Card>
-        <Card className={styles.statCard}><Statistic title="الشاغرة" value={occTotals.totalUnits - occTotals.rentedUnits} valueStyle={{ color: occTotals.totalUnits - occTotals.rentedUnits > 0 ? '#ff4d4f' : '#52c41a' }} prefix={<HomeOutlined />} /></Card>
-        <Card className={styles.statCard}><Statistic title="نسبة الإشغال" value={`${occTotals.totalUnits > 0 ? Math.round((occTotals.rentedUnits / occTotals.totalUnits) * 1000) / 10 : 0}%`} valueStyle={{ color: '#ffd700' }} prefix={<PercentageOutlined />} /></Card>
-      </div>
-      <Card className={styles.tableCard} title="الإشغال حسب العقار">
-        <Table columns={occColumns} dataSource={occupancyData} rowKey="id" pagination={false} scroll={{ x: 'max-content' }} />
-      </Card>
-    </>
-  );
+        {/* Table */}
+        <div className="bg-white rounded-xl border border-outline-variant overflow-hidden">
+          <div className="px-card-padding py-4 bg-surface-container-low border-b border-outline-variant">
+            <h3 className="font-headline-md text-headline-md text-on-surface">التفصيل الشهري</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-right">
+              <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
+                <tr>
+                  <th className="px-6 py-4 font-bold">الشهر</th>
+                  <th className="px-6 py-4 font-bold">خاضع (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">VAT (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">معفى (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">إجمالي (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">فواتير</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant">
+                {monthlyVAT.map((r) => (
+                  <tr key={r.monthKey} className="hover:bg-surface-container-lowest transition-colors">
+                    <td className="px-6 py-4 font-bold text-on-surface">{r.month}</td>
+                    <td className="px-6 py-4">{r.taxableSales.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-bold text-amber-600">{r.vatCollected.toLocaleString()}</td>
+                    <td className="px-6 py-4">{r.exemptSales.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-bold text-emerald-600">{r.totalAmount.toLocaleString()}</td>
+                    <td className="px-6 py-4">
+                      <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-label-sm font-bold">{r.invoiceCount}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-surface-container-low/50 border-t border-outline-variant font-bold">
+                <tr>
+                  <td className="px-6 py-4 text-on-surface">الإجمالي</td>
+                  <td className="px-6 py-4">{vatTotals.taxableSales.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-amber-600">{vatTotals.vatCollected.toLocaleString()}</td>
+                  <td className="px-6 py-4">{vatTotals.exemptSales.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-emerald-600">{vatTotals.totalAmount.toLocaleString()}</td>
+                  <td className="px-6 py-4">
+                    <span className="bg-amber-100 text-amber-600 px-3 py-1 rounded-full text-label-sm font-bold">{vatTotals.invoiceCount}</span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  const renderRevenue = () => {
+    if (revenueData.length === 0) {
+      return (
+        <div className="bg-white rounded-xl border border-outline-variant p-12 text-center">
+          <span className="material-symbols-outlined text-5xl text-outline-variant mb-4">payments</span>
+          <p className="text-on-surface-variant">لا توجد بيانات إيرادات</p>
+        </div>
+      );
+    }
+    return (
+      <>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: 'الإيرادات المحصلة', value: revTotals.collected, color: 'text-emerald-600', icon: 'payments' },
+            { label: 'المتأخر', value: revTotals.overdue, color: revTotals.overdue > 0 ? 'text-red-600' : 'text-emerald-600', icon: 'warning' },
+            { label: 'المعلق', value: revTotals.pending, color: 'text-orange-600', icon: 'hourglass_empty' },
+            { label: 'الإجمالي', value: revTotals.total, color: 'text-amber-600', icon: 'account_balance' },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white rounded-xl border border-outline-variant p-5 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-3">
+                <span className={`material-symbols-outlined ${stat.color}`}>{stat.icon}</span>
+                <span className="text-label-sm text-on-surface-variant">{stat.label}</span>
+              </div>
+              <div className={`text-headline-md font-bold ${stat.color}`}>
+                ر.س {stat.value.toLocaleString()}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-white rounded-xl border border-outline-variant overflow-hidden">
+          <div className="px-card-padding py-4 bg-surface-container-low border-b border-outline-variant">
+            <h3 className="font-headline-md text-headline-md text-on-surface">الإيرادات الشهرية</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-right">
+              <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
+                <tr>
+                  <th className="px-6 py-4 font-bold">الشهر</th>
+                  <th className="px-6 py-4 font-bold">محصل (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">متأخر (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">معلق (ر.س)</th>
+                  <th className="px-6 py-4 font-bold">الإجمالي (ر.س)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant">
+                {revenueData.map((r) => (
+                  <tr key={r.monthKey} className="hover:bg-surface-container-lowest transition-colors">
+                    <td className="px-6 py-4 font-bold text-on-surface">{r.month}</td>
+                    <td className="px-6 py-4 text-emerald-600">{r.collected.toLocaleString()}</td>
+                    <td className={`px-6 py-4 ${r.overdue > 0 ? 'text-red-600' : ''}`}>{r.overdue.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-orange-600">{r.pending.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-bold text-amber-600">{r.total.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-surface-container-low/50 border-t border-outline-variant font-bold">
+                <tr>
+                  <td className="px-6 py-4 text-on-surface">الإجمالي</td>
+                  <td className="px-6 py-4 text-emerald-600">{revTotals.collected.toLocaleString()}</td>
+                  <td className={`px-6 py-4 ${revTotals.overdue > 0 ? 'text-red-600' : ''}`}>{revTotals.overdue.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-orange-600">{revTotals.pending.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-amber-600">{revTotals.total.toLocaleString()}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  const renderOccupancy = () => {
+    if (occupancyData.length === 0) {
+      return (
+        <div className="bg-white rounded-xl border border-outline-variant p-12 text-center">
+          <span className="material-symbols-outlined text-5xl text-outline-variant mb-4">business</span>
+          <p className="text-on-surface-variant">لا توجد بيانات إشغال</p>
+        </div>
+      );
+    }
+    return (
+      <>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: 'إجمالي الوحدات', value: occTotals.totalUnits, color: 'text-blue-600', icon: 'home' },
+            { label: 'الوحدات المؤجرة', value: occTotals.rentedUnits, color: 'text-emerald-600', icon: 'home_work' },
+            { label: 'الشاغرة', value: occTotals.totalUnits - occTotals.rentedUnits, color: (occTotals.totalUnits - occTotals.rentedUnits) > 0 ? 'text-red-600' : 'text-emerald-600', icon: 'home' },
+            { label: 'نسبة الإشغال', value: `${occTotals.totalUnits > 0 ? Math.round((occTotals.rentedUnits / occTotals.totalUnits) * 1000) / 10 : 0}%`, color: 'text-amber-600', icon: 'pie_chart', isString: true },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white rounded-xl border border-outline-variant p-5 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-3">
+                <span className={`material-symbols-outlined ${stat.color}`}>{stat.icon}</span>
+                <span className="text-label-sm text-on-surface-variant">{stat.label}</span>
+              </div>
+              <div className={`text-headline-md font-bold ${stat.color}`}>
+                {stat.isString ? stat.value : stat.value.toLocaleString()}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-white rounded-xl border border-outline-variant overflow-hidden">
+          <div className="px-card-padding py-4 bg-surface-container-low border-b border-outline-variant">
+            <h3 className="font-headline-md text-headline-md text-on-surface">الإشغال حسب العقار</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-right">
+              <thead className="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
+                <tr>
+                  <th className="px-6 py-4 font-bold">العقار</th>
+                  <th className="px-6 py-4 font-bold">الوحدات</th>
+                  <th className="px-6 py-4 font-bold">مؤجر</th>
+                  <th className="px-6 py-4 font-bold">نسبة الإشغال</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant">
+                {occupancyData.map((r) => (
+                  <tr key={r.id} className="hover:bg-surface-container-lowest transition-colors">
+                    <td className="px-6 py-4 font-bold text-on-surface">{r.name}</td>
+                    <td className="px-6 py-4">{r.totalUnits}</td>
+                    <td className="px-6 py-4">{r.rentedUnits}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-surface-container-highest rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${
+                              r.rate >= 80 ? 'bg-emerald-500' : r.rate >= 50 ? 'bg-orange-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${Math.min(r.rate, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-label-sm font-bold text-on-surface-variant">{r.rate}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </>
+    );
+  };
 
   return (
-    <div className={styles.reportsPage}>
-      <div className={styles.pageHeader}>
-        <h1>التقارير</h1>
-        <p className={styles.subtitle}>تقارير شاملة لإدارة العقارات</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="font-headline-lg text-headline-lg font-bold text-primary">التقارير</h2>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-1">تقارير شاملة لإدارة العقارات</p>
       </div>
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={[
-          { key: 'vat', label: <span><PercentageOutlined /> VAT</span>, children: renderVAT() },
-          { key: 'revenue', label: <span><DollarCircleOutlined /> الإيرادات</span>, children: renderRevenue() },
-          { key: 'occupancy', label: <span><HomeOutlined /> الإشغال</span>, children: renderOccupancy() },
-        ]}
-      />
+
+      {/* Tabs */}
+      <div className="flex gap-1 bg-surface-container-low rounded-xl p-1 border border-outline-variant">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-label-md transition-all ${
+              activeTab === tab.key
+                ? 'bg-white text-primary shadow-sm border border-outline-variant'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      {activeTab === 'vat' && renderVAT()}
+      {activeTab === 'revenue' && renderRevenue()}
+      {activeTab === 'occupancy' && renderOccupancy()}
     </div>
   );
 };

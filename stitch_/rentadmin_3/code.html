@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>إدارة العقارات | RentAdmin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Noto+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#b6c4ff",
+                        "surface-dim": "#d8dadc",
+                        "tertiary-container": "#314156",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#f7f9fb",
+                        "primary-container": "#1e3a8a",
+                        "secondary-container": "#6cf8bb",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-secondary-container": "#00714d",
+                        "surface-container": "#eceef0",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface": "#f7f9fb",
+                        "surface-variant": "#e0e3e5",
+                        "surface-bright": "#f7f9fb",
+                        "surface-tint": "#4059aa",
+                        "on-primary-container": "#90a8ff",
+                        "primary-fixed": "#dce1ff",
+                        "error": "#ba1a1a",
+                        "outline": "#757682",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary": "#006c49",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#191c1e",
+                        "tertiary-fixed": "#d3e4fe",
+                        "primary": "#00236f",
+                        "on-primary-fixed-variant": "#264191",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#c5c5d3",
+                        "on-surface-variant": "#444651",
+                        "tertiary": "#1b2b3f",
+                        "surface-container-low": "#f2f4f6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#9dadc6",
+                        "on-secondary-fixed": "#002113",
+                        "on-background": "#191c1e",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-primary-fixed": "#00164e",
+                        "inverse-surface": "#2d3133",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-fixed-dim": "#4edea3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "card-padding": "20px",
+                        "stack-gap": "12px",
+                        "gutter": "16px",
+                        "base": "4px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Noto Sans Arabic"],
+                        "headline-xl": ["IBM Plex Sans Arabic"],
+                        "body-sm": ["Noto Sans Arabic"],
+                        "body-md": ["Noto Sans Arabic"],
+                        "label-md": ["IBM Plex Sans Arabic"],
+                        "label-sm": ["IBM Plex Sans Arabic"],
+                        "headline-xl-mobile": ["IBM Plex Sans Arabic"],
+                        "headline-md": ["IBM Plex Sans Arabic"],
+                        "headline-lg": ["IBM Plex Sans Arabic"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-xl": ["30px", {"lineHeight": "42px", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "label-sm": ["12px", {"lineHeight": "14px", "fontWeight": "500"}],
+                        "headline-xl-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["24px", {"lineHeight": "34px", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f7f9fb;
+        }
+        .property-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .property-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.08);
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface bg-background">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-screen w-64 border-l border-outline-variant bg-surface-container dark:bg-surface-container-high sticky right-0 top-0 z-40 rtl">
+<div class="p-container-margin">
+<div class="flex items-center gap-3 mb-8">
+<img alt="Logo" class="w-10 h-10 rounded-xl" data-alt="A clean, minimalist brand logo for a property management company named RentAdmin. The icon features a geometric abstract key merged with a modern skyscraper silhouette in deep navy blue and emerald green. The background is white, and the overall style is flat 2.0 with professional, sharp edges and corporate aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJ_pfBrj_sVQDMx8JEWhWYOUWsZUR13O5elMaxzMhkIauSFkcRV3FcnPEHT-_tSiA2rlAJJ_5vDi1N-uPaLN__1zFT1-f8Yh2FPmY9Abv0pbF_088HCN4SbwSLq_S__XsIAKUgeQIyLSKh3jbbXGN40kPMhbScyhGUa7yxhNV8wZ3qkUKtLfzUYqUDdL3UnWhCJzZBpLaY-cDKblBXxM7VePP-t3CuE0edTGUtk22ai8aUNNgUZw-TyrqcJnILkkePDL363z_UoQ5l"/>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">إدارة العقارات</h1>
+<p class="text-label-sm text-on-surface-variant">نظام إدارة متكامل</p>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md">لوحة التحكم</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary dark:text-primary-fixed-dim font-bold border-r-4 border-primary dark:border-primary-fixed-dim bg-primary-container/10 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="apartment" style="font-variation-settings: 'FILL' 1;">apartment</span>
+<span class="font-body-md">العقارات</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-body-md">المستأجرون</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-body-md">العقود</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-body-md">المالية</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md">الإعدادات</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-container-margin">
+<button class="w-full bg-primary text-on-primary py-3 px-4 rounded-xl font-label-md flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                    إضافة عقار جديد
+                </button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 min-w-0 flex flex-col">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-container-margin py-base h-16 sticky top-0 z-30 bg-white/80 backdrop-blur-md shadow-sm dark:bg-surface-dim/80 rtl">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pr-10 pl-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-full focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="بحث عن عقار، وحدة، أو مستأجر..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-surface-container-highest transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-3">
+<span class="hidden md:block text-label-md font-bold">أحمد الغامدي</span>
+<img alt="صورة المستخدم" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A professional headshot of a Middle Eastern man in a business suite, set against a blurred modern office background. The lighting is soft and natural, with a bright, high-key atmosphere that matches a professional UI. The image is circular as a profile avatar, conveying trust and authority in a corporate property management setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5Pw_oeyYD3r8jw_NdUfBmauBdqdFRSnpoLD39D3CNTLO7t9VlaZNWKfpitcvBIP0tq8hdv3Iyygbw4fRbtIgqK3UIX9vRXF8hBzPaYC9G4sOV7ZpKTF6xoXMTgF4mjR70bo88OWGlcVw7QxAumlKd24k3p-y7rf6ArTbWSQjica1nUsEHI236ed47ztaXFxj1z2STUmjczp8Gu-EGBietLtU_dww2eV6-9SFBiRqkvccU_kCH0zo1RiSa0WtI1NchedwgIbsCeo60"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-container-margin space-y-6">
+<!-- Page Header & Filters -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg font-bold text-primary">قائمة العقارات</h2>
+<p class="text-on-surface-variant font-body-md">إدارة وتتبع 124 وحدة عقارية نشطة</p>
+</div>
+<div class="flex flex-wrap gap-3">
+<div class="flex items-center bg-white border border-outline-variant rounded-xl p-1">
+<button class="px-4 py-2 bg-primary-container/10 text-primary font-label-md rounded-lg">الكل</button>
+<button class="px-4 py-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-lg">متاح</button>
+<button class="px-4 py-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-lg">مؤجر</button>
+</div>
+<div class="flex gap-2">
+<select class="bg-white border border-outline-variant rounded-xl px-4 py-2 font-label-md focus:ring-primary">
+<option>نوع العقار</option>
+<option>سكني</option>
+<option>تجاري</option>
+</select>
+<select class="bg-white border border-outline-variant rounded-xl px-4 py-2 font-label-md focus:ring-primary">
+<option>المدينة</option>
+<option>الرياض</option>
+<option>جدة</option>
+<option>الخبر</option>
+</select>
+<button class="bg-white border border-outline-variant p-2 rounded-xl hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Bento Grid for Property Analytics -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<div class="md:col-span-1 bg-white border border-outline-variant rounded-xl p-card-padding">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-primary bg-primary-container/10 p-2 rounded-lg" data-icon="home_work">home_work</span>
+<span class="text-secondary text-label-sm font-bold flex items-center gap-1">+2.4% <span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span></span>
+</div>
+<p class="text-on-surface-variant text-label-md">إجمالي الوحدات</p>
+<h3 class="font-headline-lg text-headline-lg font-bold">124</h3>
+</div>
+<div class="md:col-span-1 bg-white border border-outline-variant rounded-xl p-card-padding">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-secondary bg-secondary-container/10 p-2 rounded-lg" data-icon="fact_check">fact_check</span>
+</div>
+<p class="text-on-surface-variant text-label-md">نسبة الإشغال</p>
+<h3 class="font-headline-lg text-headline-lg font-bold">92%</h3>
+</div>
+<div class="md:col-span-2 bg-primary text-on-primary rounded-xl p-card-padding relative overflow-hidden">
+<div class="relative z-10">
+<p class="text-primary-fixed/80 text-label-md">العوائد المتوقعة هذا الشهر</p>
+<h3 class="font-headline-xl text-headline-xl font-bold mt-1">450,200 ريال</h3>
+<button class="mt-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 px-4 py-2 rounded-lg text-label-sm transition-colors">عرض التقرير المالي</button>
+</div>
+<div class="absolute -bottom-6 -left-6 opacity-10">
+<span class="material-symbols-outlined text-[160px]" data-icon="bar_chart">bar_chart</span>
+</div>
+</div>
+</div>
+<!-- Properties Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Property Card 1 -->
+<div class="property-card bg-white border border-outline-variant rounded-xl overflow-hidden flex flex-col">
+<div class="relative h-48 w-full">
+<img alt="برج الياقوت" class="w-full h-full object-cover" data-alt="A high-end modern residential skyscraper in Riyadh at dusk. The building features sleek glass facades and warm architectural lighting that highlights its contemporary design. The atmosphere is luxurious and clean, with a clear sky and urban city lights in the background, fitting a premium property management UI." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdshFObWGU0jEoiacEUhSxnv__dVzQ1CpA0RXvvHE2nCmIxqyADDULJUukgetbyZwa8IRwS40My4gotIHSzU26YvMpha4_ixFCzDs9nGHO-9J7Js_UG-HlV-T6uJ--otBCFCQ7LziBAKh2Gm2QaTdoeQpVvA33nsa5OP6qIM3q3gP2XTau7avM8JLu-UDrJ76d98CNVJST2cysM3MKYMMHNualTFCdQecUYYMlPs0BwyWn8pEFtUHz2AFocgWko98Ej6ikQkQjHdLw"/>
+<div class="absolute top-3 right-3 bg-secondary text-on-secondary px-3 py-1 rounded-full text-label-sm font-bold">متاح</div>
+<div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur shadow-sm px-3 py-1 rounded-lg text-label-sm font-bold text-primary">سكني</div>
+</div>
+<div class="p-card-padding space-y-3 flex-1">
+<div>
+<h4 class="font-headline-md text-headline-md font-bold text-on-surface">برج الياقوت - شقة 402</h4>
+<p class="text-on-surface-variant text-body-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+                                    حي النرجس، الرياض
+                                </p>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant text-body-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]" data-icon="bed">bed</span> 3 غرف</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]" data-icon="bathtub">bathtub</span> 2 حمام</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]" data-icon="square_foot">square_foot</span> 160م²</span>
+</div>
+<div class="pt-4 border-t border-outline-variant flex justify-between items-center">
+<div>
+<p class="text-on-surface-variant text-label-sm">الإيجار السنوي</p>
+<p class="text-primary font-bold text-body-lg">85,000 ريال</p>
+</div>
+<button class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Property Card 2 -->
+<div class="property-card bg-white border border-outline-variant rounded-xl overflow-hidden flex flex-col">
+<div class="relative h-48 w-full">
+<img alt="مجمع الأعمال" class="w-full h-full object-cover" data-alt="A modern commercial office complex with large glass windows and minimalist steel structures. The interior shows a bright, open-plan workspace with contemporary furniture. The lighting is bright and professional, representing a prime business location in a growing metropolitan area." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDWUAbaWJaUQghTsns5HAIqOtX1PT6d-0rH_rPRx6gOkz20d0wedbg2t8WH_KsJBqTYsBzvKohWZQiT9ZQ1ishaPU-8fASQ7b4iPFd2zCxoPTL4sAAKzCYeQ0Klq6lGQqz5nOVRM4imRJZ_iQOjmWc3nwCSXGMExyn6pxoNi91CMC0bOEoOELFsX0yaK0IjT7OM2P4w6pxOEzVUQQ1liJUeT6xYEAuGtdkmwCIe9CAvjNCALZ9nvn9R04kPJ-vTWLaZcRu2tfuNLpt"/>
+<div class="absolute top-3 right-3 bg-error text-on-error px-3 py-1 rounded-full text-label-sm font-bold">مؤجر</div>
+<div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur shadow-sm px-3 py-1 rounded-lg text-label-sm font-bold text-primary">تجاري</div>
+</div>
+<div class="p-card-padding space-y-3 flex-1">
+<div>
+<h4 class="font-headline-md text-headline-md font-bold text-on-surface">مجمع الأعمال - مكتب 12</h4>
+<p class="text-on-surface-variant text-body-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+                                    طريق الملك فهد، الرياض
+                                </p>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant text-body-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]" data-icon="meeting_room">meeting_room</span> 4 مكاتب</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]" data-icon="coffee">coffee</span> مطبخ</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]" data-icon="square_foot">square_foot</span> 240م²</span>
+</div>
+<div class="pt-4 border-t border-outline-variant flex justify-between items-center">
+<div>
+<p class="text-on-surface-variant text-label-sm">الإيجار السنوي</p>
+<p class="text-primary font-bold text-body-lg">150,000 ريال</p>
+</div>
+<button class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Property Card 3 -->
+<div class="property-card bg-white border border-outline-variant rounded-xl overflow-hidden flex flex-col">
+<div class="relative h-48 w-full">
+<img alt="فيلا الروضة" class="w-full h-full object-cover" data-alt="A luxurious modern villa with a clean white facade, large windows, and a beautifully landscaped front garden. The lighting is sunny and bright, capturing the Mediterranean-style architecture adapted for a Middle Eastern climate. The image exudes comfort, high-end living, and exclusivity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuADCkWrVJ_9D9xGDXzPBItfZgTmmKsgn9cTg-B1q4wWCYZF32D7EHYjti2lx3m1wf00dwuO5811qvJCimJGDj-uRP9idurizggRKtBfV4hSoOWk5GLEP-jjX4Na5eS5GtCwMahk0IALBRkqfewVpLaQBkhuvMc6GoHSG65LmAdhdiqjjVM-czJH4wqQqK3pR__S38GCN2z4jvKGXo6fGtMkcIGxd6QgY9kdhrNQAoucCylfx4O0GnmA-jkgeE_PLUJNIGta_CIFSAW5"/>
+<div class="absolute top-3 right-3 bg-secondary text-on-secondary px-3 py-1 rounded-full text-label-sm font-bold">متاح</div>
+<div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur shadow-sm px-3 py-1 rounded-lg text-label-sm font-bold text-primary">سكني</div>
+</div>
+<div class="p-card-padding space-y-3 flex-1">
+<div>
+<h4 class="font-headline-md text-headline-md font-bold text-on-surface">فيلا حي الروضة</h4>
+<p class="text-on-surface-variant text-body-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+                                    حي الروضة، جدة
+                                </p>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant text-body-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]" data-icon="bed">bed</span> 5 غرف</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]" data-icon="pool">pool</span> مسبح</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]" data-icon="square_foot">square_foot</span> 450م²</span>
+</div>
+<div class="pt-4 border-t border-outline-variant flex justify-between items-center">
+<div>
+<p class="text-on-surface-variant text-label-sm">الإيجار السنوي</p>
+<p class="text-primary font-bold text-body-lg">210,000 ريال</p>
+</div>
+<button class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination (Optional but adds to UI richness) -->
+<div class="flex justify-center items-center gap-2 pt-4">
+<button class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<button class="w-10 h-10 rounded-lg bg-primary text-on-primary font-bold">1</button>
+<button class="w-10 h-10 rounded-lg border border-outline-variant hover:bg-surface-container">2</button>
+<button class="w-10 h-10 rounded-lg border border-outline-variant hover:bg-surface-container">3</button>
+<button class="p-2 rounded-lg border border-outline-variant hover:bg-surface-container">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+<!-- Mobile Bottom Nav (Suppressed for focused management screen but kept for responsive design integrity) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-outline-variant px-6 py-3 flex justify-between items-center z-50">
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px]">الرئيسية</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary font-bold">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">apartment</span>
+<span class="text-[10px]">العقارات</span>
+</button>
+<div class="relative -top-6">
+<button class="w-12 h-12 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">group</span>
+<span class="text-[10px]">المستأجرون</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px]">الإعدادات</span>
+</button>
+</nav>
+</body></html>

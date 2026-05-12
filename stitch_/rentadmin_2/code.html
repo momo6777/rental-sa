@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&amp;family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Noto Sans Arabic', sans-serif;
+            background-color: #f7f9fb;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#b6c4ff",
+                        "surface-dim": "#d8dadc",
+                        "tertiary-container": "#314156",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#f7f9fb",
+                        "primary-container": "#1e3a8a",
+                        "secondary-container": "#6cf8bb",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-secondary-container": "#00714d",
+                        "surface-container": "#eceef0",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface": "#f7f9fb",
+                        "surface-variant": "#e0e3e5",
+                        "surface-bright": "#f7f9fb",
+                        "surface-tint": "#4059aa",
+                        "on-primary-container": "#90a8ff",
+                        "primary-fixed": "#dce1ff",
+                        "error": "#ba1a1a",
+                        "outline": "#757682",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary": "#006c49",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#191c1e",
+                        "tertiary-fixed": "#d3e4fe",
+                        "primary": "#00236f",
+                        "on-primary-fixed-variant": "#264191",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#c5c5d3",
+                        "on-surface-variant": "#444651",
+                        "tertiary": "#1b2b3f",
+                        "surface-container-low": "#f2f4f6",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#9dadc6",
+                        "on-secondary-fixed": "#002113",
+                        "on-background": "#191c1e",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-primary-fixed": "#00164e",
+                        "inverse-surface": "#2d3133",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-fixed-dim": "#4edea3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "card-padding": "20px",
+                        "stack-gap": "12px",
+                        "gutter": "16px",
+                        "base": "4px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Noto Sans Arabic"],
+                        "headline-xl": ["IBM Plex Sans Arabic"],
+                        "body-sm": ["Noto Sans Arabic"],
+                        "body-md": ["Noto Sans Arabic"],
+                        "label-md": ["IBM Plex Sans Arabic"],
+                        "label-sm": ["IBM Plex Sans Arabic"],
+                        "headline-xl-mobile": ["IBM Plex Sans Arabic"],
+                        "headline-md": ["IBM Plex Sans Arabic"],
+                        "headline-lg": ["IBM Plex Sans Arabic"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-xl": ["30px", {"lineHeight": "42px", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "label-sm": ["12px", {"lineHeight": "14px", "fontWeight": "500"}],
+                        "headline-xl-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["24px", {"lineHeight": "34px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="flex flex-col h-full sticky right-0 top-0 z-40 rtl h-screen w-64 border-l border-outline-variant bg-surface-container dark:bg-surface-container-high">
+<div class="p-container-margin flex flex-col gap-base">
+<div class="flex items-center gap-stack-gap mb-8">
+<img alt="Logo" class="rounded-lg w-12 h-12" data-alt="A professional and sleek corporate logo for a property management firm called RentAdmin. The logo features abstract geometric shapes resembling modern skyscrapers in deep royal blue and emerald green. The lighting is crisp and the style is minimalist Flat 2.0, reflecting authority and technological advancement in the real estate sector." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd-uwa0snKtLjoja4E1-zqbRDWC-eERPQCmBpWQQ8OMr9XaHyWQX7ih64vw-IcJ6QQuVXt_CMsJGgO2-HXhVx_EpZD3ZFdIAUk496-O-nDhU9ocAO5D0-tvWYw9uHyb7p12Z1-0PvsZpQktfDUTlN8l8xuSTPm8IsZ9VxAp_tVv4w_oNn6jL6ccOKa17OiF5SaYYLVb2RWt-6f_WSwSZv7NGuCTp3Td3z3z_JpZD8Q4jQTbupX43pbVco0ifI0A8IgCcQknYrcBm2v"/>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">إدارة العقارات</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">نظام إدارة متكامل</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">لوحة التحكم</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="apartment">apartment</span>
+<span class="font-body-md text-body-md">العقارات</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary dark:text-primary-fixed-dim font-bold border-r-4 border-primary dark:border-primary-fixed-dim bg-primary-container/10 active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-body-md text-body-md">المستأجرون</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-body-md text-body-md">العقود</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-body-md text-body-md">المالية</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md">الإعدادات</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-container-margin">
+<button class="w-full py-4 px-6 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                    إضافة عقار جديد
+                </button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col overflow-y-auto">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-container-margin py-base h-16 sticky top-0 z-30 rtl bg-white/80 backdrop-blur-md shadow-sm dark:bg-surface-dim/80">
+<div class="flex items-center gap-gutter">
+<div class="relative group">
+<input class="pr-10 pl-4 py-2 border border-outline-variant rounded-full bg-surface-container-low focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all w-64 md:w-96 text-body-sm" placeholder="بحث عن مستأجر أو عقد..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+</div>
+</div>
+<div class="flex items-center gap-gutter">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="text-left hidden md:block">
+<p class="font-label-md text-label-md text-on-surface font-bold">أحمد العتيبي</p>
+<p class="text-[10px] text-on-surface-variant">مدير النظام</p>
+</div>
+<img alt="صورة المستخدم" class="w-10 h-10 rounded-full border-2 border-primary-fixed shadow-sm" data-alt="A close-up high-quality portrait of a professional Middle Eastern man in a business setting. He is wearing a modern professional suit with no tie. The background is a blurred high-end office with soft natural lighting coming from a large window. The color palette is warm and natural with soft highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQnH6ZPIXeS34PveqUdHhGdwIdUFZMv_O_admzkczT7CLwZgmwv-5vPd__CHxx74rDZrOppu8uIGpAmubtWnwFt-MH1H_VpKv_U08qT6oVU_q62-4leQU-44fnMQ3q1b3co1uKAWdQMpjQmySSZ-nI-OKbBPjDmiGNTnrIsRm0usbNTcMrwvTbTi_k3G_fX0InoWWFH3lNgRT9UlMr78Ga7K488voy9wZ9xqZyDNNGds1Jb8BOb5Swbg03W5CRWOIeRct9B6i4NlnN"/>
+</div>
+</div>
+</header>
+<div class="p-container-margin">
+<!-- Header Actions -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">إدارة المستأجرين والعقود</h2>
+<p class="text-body-md text-on-surface-variant">متابعة المستأجرين النشطين وحالة العقود الحالية</p>
+</div>
+<button class="bg-primary text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold hover:shadow-lg transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+                        توثيق عقد جديد
+                    </button>
+</div>
+<!-- Stats Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-8">
+<div class="bg-white border border-outline-variant p-card-padding rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="p-2 bg-primary-container/10 text-primary rounded-lg">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+</span>
+<span class="text-secondary text-body-sm flex items-center font-bold">
+<span class="material-symbols-outlined text-sm" data-icon="trending_up">trending_up</span>
+                                12%+
+                            </span>
+</div>
+<div class="mt-4">
+<h3 class="text-on-surface-variant text-label-sm">إجمالي المستأجرين</h3>
+<p class="text-headline-md font-bold text-on-surface">1,248</p>
+</div>
+</div>
+<div class="bg-white border border-outline-variant p-card-padding rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="p-2 bg-secondary-container/20 text-secondary rounded-lg">
+<span class="material-symbols-outlined" data-icon="verified">verified</span>
+</span>
+<span class="text-on-surface-variant text-body-sm font-bold">98%</span>
+</div>
+<div class="mt-4">
+<h3 class="text-on-surface-variant text-label-sm">عقود موثقة</h3>
+<p class="text-headline-md font-bold text-on-surface">1,112</p>
+</div>
+</div>
+<div class="bg-white border border-outline-variant p-card-padding rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="p-2 bg-error-container/20 text-error rounded-lg">
+<span class="material-symbols-outlined" data-icon="event_busy">event_busy</span>
+</span>
+<span class="text-error text-body-sm font-bold">تنبيه</span>
+</div>
+<div class="mt-4">
+<h3 class="text-on-surface-variant text-label-sm">عقود تنتهي قريباً</h3>
+<p class="text-headline-md font-bold text-on-surface">14</p>
+</div>
+</div>
+<div class="bg-white border border-outline-variant p-card-padding rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="p-2 bg-tertiary-fixed/20 text-tertiary rounded-lg">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</span>
+</div>
+<div class="mt-4">
+<h3 class="text-on-surface-variant text-label-sm">إجمالي التحصيل المتوقع</h3>
+<p class="text-headline-md font-bold text-on-surface">4.2M ر.س</p>
+</div>
+</div>
+</div>
+<!-- Main Management Table -->
+<div class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+<div class="p-card-padding border-b border-outline-variant flex justify-between items-center bg-surface-container-low/50">
+<h3 class="font-headline-md text-headline-md text-on-surface">قائمة المستأجرين</h3>
+<div class="flex gap-2">
+<button class="flex items-center gap-1 px-3 py-1.5 border border-outline-variant rounded-lg text-body-sm hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="filter_list">filter_list</span>
+                                تصفية
+                            </button>
+<button class="flex items-center gap-1 px-3 py-1.5 border border-outline-variant rounded-lg text-body-sm hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="download">download</span>
+                                تصدير
+                            </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-right">
+<thead class="bg-surface-container-low text-on-surface-variant border-b border-outline-variant font-label-md">
+<tr>
+<th class="px-6 py-4 font-bold">المستأجر</th>
+<th class="px-6 py-4 font-bold">رقم الهاتف</th>
+<th class="px-6 py-4 font-bold">العقار / الوحدة</th>
+<th class="px-6 py-4 font-bold">قيمة الإيجار</th>
+<th class="px-6 py-4 font-bold">تاريخ انتهاء العقد</th>
+<th class="px-6 py-4 font-bold">الحالة</th>
+<th class="px-6 py-4 font-bold text-left">إجراءات</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 - Alert State -->
+<tr class="hover:bg-surface-container-lowest transition-colors bg-error-container/5">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-primary-container text-white rounded-full flex items-center justify-center font-bold">س</div>
+<div>
+<p class="font-bold text-on-surface">سالم بن محمد الشمري</p>
+<p class="text-body-sm text-on-surface-variant">رقم الهوية: 102*****45</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-body-md text-on-surface-variant">0504443322</td>
+<td class="px-6 py-4 text-on-surface-variant">برج اللؤلؤة - شقة 402</td>
+<td class="px-6 py-4 font-bold text-primary">45,000 ر.س</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-error font-bold">15 يونيو 2024</span>
+<span class="text-[10px] text-error">(ينتهي خلال 3 أيام)</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 bg-error/10 text-error rounded-full text-label-sm font-bold border border-error/20">تنبيه انتهاء</span>
+</td>
+<td class="px-6 py-4 text-left">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 - Active State -->
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-secondary text-white rounded-full flex items-center justify-center font-bold">ن</div>
+<div>
+<p class="font-bold text-on-surface">نورة عبدالعزيز الراشد</p>
+<p class="text-body-sm text-on-surface-variant">رقم الهوية: 109*****12</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-body-md text-on-surface-variant">0551122334</td>
+<td class="px-6 py-4 text-on-surface-variant">فيلا الياسمين - الوحدة 3</td>
+<td class="px-6 py-4 font-bold text-primary">120,000 ر.س</td>
+<td class="px-6 py-4 text-on-surface-variant">20 ديسمبر 2024</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-label-sm font-bold border border-secondary/20">نشط</span>
+</td>
+<td class="px-6 py-4 text-left">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 - Warning State -->
+<tr class="hover:bg-surface-container-lowest transition-colors bg-warning-container/5">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-tertiary text-white rounded-full flex items-center justify-center font-bold">خ</div>
+<div>
+<p class="font-bold text-on-surface">خالد إبراهيم المنصور</p>
+<p class="text-body-sm text-on-surface-variant">رقم الهوية: 101*****89</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-body-md text-on-surface-variant">0598877665</td>
+<td class="px-6 py-4 text-on-surface-variant">مجمع المروج - مكتب 12</td>
+<td class="px-6 py-4 font-bold text-primary">85,000 ر.س</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-orange-600 font-bold">02 يوليو 2024</span>
+<span class="text-[10px] text-orange-600">(ينتهي خلال 20 يوم)</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-label-sm font-bold border border-orange-200">شارف على الانتهاء</span>
+</td>
+<td class="px-6 py-4 text-left">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-on-surface-variant text-white rounded-full flex items-center justify-center font-bold">ع</div>
+<div>
+<p class="font-bold text-on-surface">عبدالله فهد السبيعي</p>
+<p class="text-body-sm text-on-surface-variant">رقم الهوية: 103*****56</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-body-md text-on-surface-variant">0542211998</td>
+<td class="px-6 py-4 text-on-surface-variant">برج اللؤلؤة - شقة 1005</td>
+<td class="px-6 py-4 font-bold text-primary">52,000 ر.س</td>
+<td class="px-6 py-4 text-on-surface-variant">15 مارس 2025</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-label-sm font-bold border border-secondary/20">نشط</span>
+</td>
+<td class="px-6 py-4 text-left">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 border-t border-outline-variant flex justify-between items-center bg-surface-container-low/50">
+<p class="text-body-sm text-on-surface-variant">عرض 1-4 من أصل 1,248 مستأجر</p>
+<div class="flex gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container transition-colors disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

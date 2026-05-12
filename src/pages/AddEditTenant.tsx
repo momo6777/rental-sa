@@ -60,16 +60,19 @@ const AddEditTenant = ({ tenantId, onClose, visible }: AddEditTenantProps) => {
     try {
       setLoading(true);
       
+      // Remove file fields that don't exist in DB
+      const { image_file, ...dbValues } = values;
+      
       let result;
       if (tenantId) {
         result = await supabase
           .from('tenants')
-          .update(values)
+          .update(dbValues)
           .eq('id', tenantId);
       } else {
         result = await supabase
           .from('tenants')
-          .insert([values]);
+          .insert([dbValues]);
       }
       
       if (result.error) throw result.error;
@@ -99,7 +102,7 @@ const AddEditTenant = ({ tenantId, onClose, visible }: AddEditTenantProps) => {
   return (
     <Modal
       title={tenantId ? 'تعديل المستأجر' : 'إضافة مستأجر جديد'}
-      visible={true}
+      visible={visible}
       onCancel={onClose}
       footer={[
         <Button key="back" onClick={onClose}>

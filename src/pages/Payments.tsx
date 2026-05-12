@@ -1,19 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Space, Tag, Popconfirm, Spin, Input, Select, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { PaymentInvoicePDF } from '../components/PaymentInvoicePDF';
 import AddEditPayment from './AddEditPayment';
-import styles from './Payments.module.css';
-
-const { Option } = Select;
 
 const PaymentsPage = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [filteredPayments, setFilteredPayments] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
@@ -22,83 +18,37 @@ const PaymentsPage = () => {
     fetchPayments();
   }, []);
 
+  useEffect(() => {
+    applyFilters();
+  }, [searchTerm, payments]);
+
   const fetchPayments = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('payments')
-        .select(`
-          id,
-          contract_id,
-          amount,
-          vat_amount,
-          total_amount,
-          due_date,
-          paid_date,
-          status,
-          payment_method,
-          invoice_number,
-          created_at,
-          contract:contracts (
-            id,
-            unit_id,
-            tenant_id,
-            rent_amount,
-            ejar_contract_number,
-            unit:units (
-              id,
-              unit_number,
-              floor,
-              area_sqm,
-              type,
-              status,
-              rent_price,
-              is_commercial,
-              property:properties (
-                id,
-                name_ar,
-                name_en,
-                city,
-                district,
-                parcel_number,
-                deed_number
-              )
-            ),
-            tenant:tenants (
-              id,
-              full_name_ar,
-              full_name_en,
-              national_id,
-              iqama_number,
-              nationality,
-              phone,
-              email
-            )
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      setPayments(data);
-      setFilteredPayments(data);
+      setPayments(data || []);
+      setFilteredPayments(data || []);
     } catch (err: any) {
       console.error('Error fetching payments', err);
-      message.error(err.message || 'فشل تحميل المدفوعات');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    const term = e.target.value.toLowerCase().trim();
+  const applyFilters = () => {
+    const term = searchTerm.toLowerCase().trim();
     if (!term) {
       setFilteredPayments(payments);
       return;
     }
-    const filtered = payments.filter(p =>
-      (p.id && p.id.toString().includes(term)) ||
-      (p.contract_id && p.contract_id.toString().includes(term)) ||
-      (p.invoice_number && p.invoice_number.toString().includes(term))
+    const filtered = payments.filter(
+      (p) =>
+        (p.id && p.id.toString().includes(term)) ||
+        (p.invoice_number && p.invoice_number.toString().includes(term))
     );
     setFilteredPayments(filtered);
   };
@@ -108,151 +58,176 @@ const PaymentsPage = () => {
     setModalVisible(true);
   };
 
-  const handleEditPayment = (payment: any) => {
-    setSelectedPayment(payment);
-    setModalVisible(true);
-  };
-
-  const handleDeletePayment = async (paymentId: string) => {
-    try {
-      const { error } = await supabase.from('payments').delete().eq('id', paymentId);
-      if (error) throw error;
-      message.success('تم حذف الدفعة بنجاح');
-      fetchPayments();
-    } catch (err: any) {
-      console.error('Error deleting payment', err);
-      message.error(err.message || 'فشل حذف الدفعة');
-    }
-  };
-
   const handleModalClose = () => {
     setModalVisible(false);
     setSelectedPayment(null);
     fetchPayments();
   };
 
-  const columns = [
-    {
-      title: 'معرف الدفعة',
-      dataIndex: 'id',
-      key: 'id',
-      render: (text: string) => <Tag color="purple">{text}</Tag>,
-    },
-    {
-      title: 'العقد',
-      dataIndex: 'contract_id',
-      key: 'contract_id',
-    },
-    {
-      title: 'المبلغ',
-      dataIndex: 'amount',
-      key: 'amount',
-    },
-    {
-      title: 'الضريبة (VAT)',
-      dataIndex: 'vat_amount',
-      key: 'vat_amount',
-    },
-    {
-      title: 'المجموع',
-      dataIndex: 'total_amount',
-      key: 'total_amount',
-    },
-    {
-      title: 'تاريخ الاستحقاق',
-      dataIndex: 'due_date',
-      key: 'due_date',
-      render: (date: string) => new Date(date).toLocaleDateString('ar-SA'),
-    },
-    {
-      title: 'تاريخ الدفع',
-      dataIndex: 'paid_date',
-      key: 'paid_date',
-      render: (date: string) => (date ? new Date(date).toLocaleDateString('ar-SA') : '-'),
-    },
-    {
-      title: 'الحالة',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => {
-        let color = 'default';
-        if (status === 'paid') color = 'green';
-        else if (status === 'overdue') color = 'red';
-        else if (status === 'pending') color = 'orange';
-        return <Tag color={color}>{status}</Tag>;
-      },
-    },
-    {
-      title: 'طريقة الدفع',
-      dataIndex: 'payment_method',
-      key: 'payment_method',
-    },
-    {
-      title: 'رقم الفاتورة',
-      dataIndex: 'invoice_number',
-      key: 'invoice_number',
-    },
-    {
-      title: 'الإجراءات',
-      key: 'actions',
-      render: (_: any, record: any) => (
-        <Space size="middle">
-          {user?.role === 'admin' && (
-            <>
-              <Button size="small" icon={<EditOutlined />} onClick={() => handleEditPayment(record)} />
-              <Popconfirm
-                title="هل تريد حذف هذه الدفعة؟"
-                onConfirm={() => handleDeletePayment(record.id)}
-                okText="نعم"
-                cancelText="لا"
-              >
-                <Button size="small" danger icon={<DeleteOutlined />} />
-              </Popconfirm>
-            </>
-          )}
-          {/* PDF download for any user (or admin only if desired) */}
-          <PaymentInvoicePDF payment={record} />
-        </Space>
-      ),
-    },
-  ];
+  const totalCollected = payments
+    .filter((p) => p.status === 'paid')
+    .reduce((sum, p) => sum + (p.total_amount || 0), 0);
+  const totalPending = payments
+    .filter((p) => p.status === 'pending' || p.status === 'overdue')
+    .reduce((sum, p) => sum + (p.total_amount || 0), 0);
+  const collectionRate =
+    totalCollected + totalPending > 0
+      ? ((totalCollected / (totalCollected + totalPending)) * 100).toFixed(1)
+      : '0';
+
+  const statusColor: Record<string, string> = {
+    paid: 'bg-secondary/10 text-secondary',
+    pending: 'bg-amber-100 text-amber-700',
+    overdue: 'bg-error/10 text-error',
+  };
+  const statusLabel: Record<string, string> = {
+    paid: 'مدفوع',
+    pending: 'مستحق',
+    overdue: 'متأخر',
+  };
 
   return (
-    <div className={styles.paymentsPage}>
-      <div className={styles.pageHeader}>
-        <h1>إدارة المدفوعات</h1>
-        <div className={styles.headerActions}>
-          <Space>
-            <Input.Search
-              placeholder="ابحث بالمعرف أو العقد أو الفاتورة..."
-              value={searchTerm}
-              onChange={handleSearch}
-              style={{ width: 300 }}
-            />
-            {user?.role === 'admin' && (
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleAddPayment}>
-                إضافة دفعة
-              </Button>
-            )}
-          </Space>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-end">
+        <div>
+          <h2 className="font-headline-lg text-headline-lg font-bold text-primary">التحصيل المالي</h2>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-1">تتبع التدفقات النقدية وحالة تحصيل الإيجارات</p>
+        </div>
+        <div className="flex gap-3">
+          <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="بحث..."
+            className="bg-white border border-outline-variant rounded-xl px-4 py-2 font-label-md focus:ring-primary w-56"
+          />
+          {user?.role === 'admin' && (
+            <button
+              onClick={handleAddPayment}
+              className="bg-secondary text-on-secondary px-4 py-2 rounded-xl font-label-md flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-[18px]">add_card</span>
+              تسجيل دفعة
+            </button>
+          )}
         </div>
       </div>
 
+      {/* Bento Financial Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+        <div className="bg-white p-card-padding rounded-xl border border-outline-variant shadow-sm flex flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary">
+              <span className="material-symbols-outlined fill">account_balance_wallet</span>
+            </div>
+            <span className="text-secondary font-label-sm bg-secondary/5 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">trending_up</span>
+              {collectionRate}%
+            </span>
+          </div>
+          <div className="mt-4">
+            <p className="font-label-md text-label-md text-on-surface-variant">إجمالي المحصل</p>
+            <h3 className="font-headline-xl text-headline-xl text-secondary mt-1">{totalCollected.toLocaleString()} ر.س</h3>
+          </div>
+        </div>
+
+        <div className="bg-white p-card-padding rounded-xl border border-outline-variant shadow-sm flex flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 bg-error/10 rounded-xl flex items-center justify-center text-error">
+              <span className="material-symbols-outlined fill">pending_actions</span>
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="font-label-md text-label-md text-on-surface-variant">المتبقي (غير محصل)</p>
+            <h3 className="font-headline-xl text-headline-xl text-error mt-1">{totalPending.toLocaleString()} ر.س</h3>
+          </div>
+        </div>
+
+        <div className="bg-white p-card-padding rounded-xl border border-outline-variant shadow-sm col-span-1 md:col-span-2 relative overflow-hidden">
+          <div className="flex justify-between relative z-10">
+            <div className="space-y-4">
+              <p className="font-label-md text-label-md text-on-surface-variant">معدل التحصيل العام</p>
+              <h3 className="font-headline-xl text-headline-xl text-primary">{collectionRate}%</h3>
+              <div className="w-64 h-2 bg-surface-container rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full" style={{ width: `${collectionRate}%` }}></div>
+              </div>
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                إجمالي {payments.length} دفعة
+              </p>
+            </div>
+            <div className="opacity-10">
+              <span className="material-symbols-outlined text-[120px]">analytics</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
       {loading ? (
-        <div className={styles.loadingContainer}>
-          <Spin tip="جاري تحميل المدفوعات..." />
+        <div className="flex items-center justify-center h-40">
+          <div className="animate-pulse flex flex-col items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/20"></div>
+            <div className="h-3 w-32 bg-surface-container-highest rounded"></div>
+          </div>
         </div>
       ) : (
-        <Table
-          columns={columns}
-          dataSource={filteredPayments}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: 'max-content' }}
-        />
+        <div className="bg-white rounded-xl border border-outline-variant overflow-hidden">
+          <div className="px-card-padding py-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+            <h3 className="font-headline-md text-headline-md text-on-surface">سجل الفواتير والدفعات</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-right">
+              <thead>
+                <tr className="bg-slate-50 font-label-md text-label-md text-on-surface-variant border-b border-outline-variant">
+                  <th className="px-card-padding py-4 font-semibold">رقم الفاتورة</th>
+                  <th className="px-card-padding py-4 font-semibold">المبلغ</th>
+                  <th className="px-card-padding py-4 font-semibold">الضريبة</th>
+                  <th className="px-card-padding py-4 font-semibold">المجموع</th>
+                  <th className="px-card-padding py-4 font-semibold">تاريخ الاستحقاق</th>
+                  <th className="px-card-padding py-4 font-semibold">حالة الدفع</th>
+                  <th className="px-card-padding py-4 font-semibold">الطريقة</th>
+                </tr>
+              </thead>
+              <tbody className="font-body-md text-body-md divide-y divide-outline-variant">
+                {filteredPayments.map((p) => (
+                  <tr key={p.id} className="hover:bg-surface-container-low transition-colors">
+                    <td className="px-card-padding py-4">
+                      <span className="bg-primary-container/10 text-primary px-2 py-1 rounded text-label-sm font-bold">
+                        {p.invoice_number || `#${p.id?.slice(0, 6)}`}
+                      </span>
+                    </td>
+                    <td className="px-card-padding py-4 font-bold text-on-surface">{p.amount?.toLocaleString()} ر.س</td>
+                    <td className="px-card-padding py-4 text-on-surface-variant">{p.vat_amount?.toLocaleString()} ر.س</td>
+                    <td className="px-card-padding py-4 font-bold text-primary">{p.total_amount?.toLocaleString()} ر.س</td>
+                    <td className="px-card-padding py-4 text-on-surface-variant">
+                      {p.due_date ? new Date(p.due_date).toLocaleDateString('ar-SA') : '-'}
+                    </td>
+                    <td className="px-card-padding py-4">
+                      <span className={`px-3 py-1 rounded-full text-label-sm font-medium ${statusColor[p.status] || 'bg-surface-container text-on-surface-variant'}`}>
+                        {statusLabel[p.status] || p.status}
+                      </span>
+                    </td>
+                    <td className="px-card-padding py-4 text-on-surface-variant">{p.payment_method || '-'}</td>
+                  </tr>
+                ))}
+                {filteredPayments.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="px-card-padding py-8 text-center text-on-surface-variant">
+                      لا توجد دفعات مسجلة
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-card-padding py-4 border-t border-outline-variant flex items-center justify-between">
+            <p className="font-label-sm text-label-sm text-on-surface-variant">
+              عرض {filteredPayments.length} من أصل {payments.length} دفعة
+            </p>
+          </div>
+        </div>
       )}
 
-      {/* Add/Edit Payment Modal */}
       <AddEditPayment
         paymentId={selectedPayment?.id}
         onClose={handleModalClose}

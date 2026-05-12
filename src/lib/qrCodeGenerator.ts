@@ -1,4 +1,4 @@
-const QR_CODE = require('qrcode');
+import QR_CODE from 'qrcode';
 
 // ZATCA TLV tags for e-Invoice QR code
 const TAGS = {

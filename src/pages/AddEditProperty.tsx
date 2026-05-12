@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Select, DatePicker, Upload, Button, message, Modal } from 'antd';
+import { Form, Input, InputNumber, Select, Upload, Button, message, Modal } from 'antd';
 import { PlusOutlined, CameraOutlined, FileTextOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
@@ -18,23 +18,36 @@ const AddEditProperty = ({ propertyId, onClose, visible }: AddEditPropertyProps)
   const { user } = useAuth();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [propertyData, setPropertyData] = useState({
+  const [propertyData, setPropertyData] = useState<Record<string, any>>({
     name_ar: '',
     name_en: '',
-    type: 'residential' as 'residential' | 'commercial',
+    type: 'residential',
     city: '',
     district: '',
     parcel_number: '',
     deed_number: '',
-    total_units: 0
+    total_units: 0,
+    image_url: '',
+    deed_url: '',
   });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewDeed, setPreviewDeed] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(!!propertyId);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingDeed, setUploadingDeed] = useState(false);
+  const isEditing = !!propertyId;
 
   useEffect(() => {
     if (propertyId) {
       fetchPropertyDetails();
+    } else {
+      form.resetFields();
+      setPropertyData({
+        name_ar: '', name_en: '', type: 'residential',
+        city: '', district: '', parcel_number: '', deed_number: '', total_units: 0,
+        image_url: '', deed_url: '',
+      });
+      setPreviewImage(null);
+      setPreviewDeed(null);
     }
   }, [propertyId]);
 
@@ -50,6 +63,7 @@ const AddEditProperty = ({ propertyId, onClose, visible }: AddEditPropertyProps)
       if (error) throw error;
       
       setPropertyData(data);
+      form.setFieldsValue(data);
     } catch (error) {
       console.error('Error fetching property details:', error);
       message.error('فشل تحميل بيانات العقار');
@@ -62,16 +76,18 @@ const AddEditProperty = ({ propertyId, onClose, visible }: AddEditPropertyProps)
     try {
       setLoading(true);
       
+      const { image_file, deed_file, ...dbValues } = values;
+      
       let result;
       if (isEditing) {
         result = await supabase
           .from('properties')
-          .update(values)
+          .update(dbValues)
           .eq('id', propertyId);
       } else {
         result = await supabase
           .from('properties')
-          .insert([values]);
+          .insert([dbValues]);
       }
       
       if (result.error) throw result.error;
@@ -86,23 +102,44 @@ const AddEditProperty = ({ propertyId, onClose, visible }: AddEditPropertyProps)
     }
   };
 
-  const handleImageChange = (info: any) => {
-    if (info.file.status === 'done') {
-      // In a real app, you would upload to Supabase Storage first
-      // For demo, we'll use a placeholder URL
-      setPreviewImage(info.file.url || URL.createObjectURL(info.file.originFileObj));
-    } else if (info.file.status === 'error') {
-      message.error('فشل رفع الصورة');
+  const uploadFile = async (file: File, folder: string): Promise<string | null> => {
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `${folder}/${Date.now()}.${ext}`;
+      const { data, error } = await supabase.storage
+        .from('property_images')
+        .upload(fileName, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage
+        .from('property_images')
+        .getPublicUrl(fileName);
+      return urlData.publicUrl;
+    } catch (err: any) {
+      message.error(err.message || 'فشل رفع الملف');
+      return null;
     }
   };
 
-  const handleDeedChange = (info: any) => {
-    if (info.file.status === 'done') {
-      // In a real app, you would upload to Supabase Storage first
-      setPreviewDeed(info.file.url || URL.createObjectURL(info.file.originFileObj));
-    } else if (info.file.status === 'error') {
-      message.error('فشل رفع وثيقة الصك');
+  const handleImageUpload = async (file: File) => {
+    setUploadingImage(true);
+    const url = await uploadFile(file, 'images');
+    if (url) {
+      setPreviewImage(url);
+      form.setFieldValue('image_url', url);
     }
+    setUploadingImage(false);
+    return false;
+  };
+
+  const handleDeedUpload = async (file: File) => {
+    setUploadingDeed(true);
+    const url = await uploadFile(file, 'deeds');
+    if (url) {
+      setPreviewDeed(url);
+      form.setFieldValue('deed_url', url);
+    }
+    setUploadingDeed(false);
+    return false;
   };
 
   if (!visible) return null;
@@ -190,19 +227,19 @@ const AddEditProperty = ({ propertyId, onClose, visible }: AddEditPropertyProps)
           name="total_units"
           rules={[{ required: true, type: 'number', min: 1, message: 'يرجى إدخال عدد الوحدات (رقم أكبر من صفر)' }]}
         >
-          <Input
-            type="number"
+          <InputNumber
+            min={1}
             placeholder="أدخل عدد الوحدات"
-            style={{ borderRadius: 8 }}
+            style={{ width: '100%', borderRadius: 8 }}
           />
         </Form.Item>
 
         <Form.Item
-          label="رقم parcel"
+          label="رقم القطعة"
           name="parcel_number"
         >
           <Input
-            placeholder="أدخل رقم parcel (اختياري)"
+            placeholder="أدخل رقم القطعة (اختياري)"
             style={{ borderRadius: 8 }}
           />
         </Form.Item>
@@ -217,46 +254,57 @@ const AddEditProperty = ({ propertyId, onClose, visible }: AddEditPropertyProps)
           />
         </Form.Item>
 
+        <Form.Item name="image_url" hidden><Input /></Form.Item>
         <Form.Item
           label="صورة العقار"
-          name="image_file"
           extra="الحد الأقصى للحجم: 5 ميجابايت"
         >
-          <Dragger>
-            <p className={styles.uploadText}>
-              <CameraOutlined style={{ fontSize: 24, marginBottom: 8 }} />
+          <Upload
+            accept="image/*"
+            showUploadList={false}
+            beforeUpload={handleImageUpload}
+          >
+            <div className="border border-dashed border-outline-variant rounded-xl p-6 text-center cursor-pointer hover:bg-surface-container-low transition-colors">
+              <CameraOutlined style={{ fontSize: 24, color: '#757682', marginBottom: 8 }} />
               <br />
-              انقر لرفع الصورة أو اسحبها هنا
-            </p>
-          </Dragger>
+              <span className="text-body-sm text-on-surface-variant">
+                {uploadingImage ? 'جاري الرفع...' : 'انقر لرفع الصورة أو اسحبها هنا'}
+              </span>
+            </div>
+          </Upload>
         </Form.Item>
 
-        {previewImage && (
-          <div className={styles.previewBox}>
-            <h4>معاينة الصورة:</h4>
-            <img src={previewImage} alt="معاينة" style={{ maxWidth: '100%', borderRadius: 8 }} />
+        {(previewImage || propertyData.image_url) && (
+          <div className="bg-surface-container-low rounded-xl p-4 mb-4">
+            <h4 className="font-label-md mb-2">معاينة الصورة:</h4>
+            <img src={previewImage || propertyData.image_url} alt="معاينة" style={{ maxWidth: '100%', borderRadius: 8 }} />
           </div>
         )}
 
+        <Form.Item name="deed_url" hidden><Input /></Form.Item>
         <Form.Item
           label="وثيقة الصك"
-          name="deed_file"
           extra="الحد الأقصى للحجم: 10 ميجابايت, بصيغة PDF"
         >
-          <Dragger>
-            <p className={styles.uploadText}>
-              <FileTextOutlined style={{ fontSize: 24, marginBottom: 8 }} />
+          <Upload
+            accept=".pdf,image/*"
+            showUploadList={false}
+            beforeUpload={handleDeedUpload}
+          >
+            <div className="border border-dashed border-outline-variant rounded-xl p-6 text-center cursor-pointer hover:bg-surface-container-low transition-colors">
+              <FileTextOutlined style={{ fontSize: 24, color: '#757682', marginBottom: 8 }} />
               <br />
-              انقر لرفع وثيقة الصك أو اسحبها هنا
-            </p>
-          </Dragger>
+              <span className="text-body-sm text-on-surface-variant">
+                {uploadingDeed ? 'جاري الرفع...' : 'انقر لرفع وثيقة الصك أو اسحبها هنا'}
+              </span>
+            </div>
+          </Upload>
         </Form.Item>
 
-        {previewDeed && (
-          <div className={styles.previewBox}>
-            <h4>معاينة وثيقة الصك:</h4>
-            <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a', marginBottom: 8 }} />
-            <p>تم رفع الوثيقة بنجاح</p>
+        {(previewDeed || propertyData.deed_url) && (
+          <div className="bg-surface-container-low rounded-xl p-4 mb-4">
+            <h4 className="font-label-md mb-2">تم رفع وثيقة الصك بنجاح</h4>
+            <CheckCircleOutlined style={{ fontSize: 32, color: '#52c41a' }} />
           </div>
         )}
       </Form>
