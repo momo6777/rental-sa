@@ -515,19 +515,20 @@ const AccountingPage = () => {
           <h4 className="font-headline-md text-headline-md text-on-surface mb-6">الرسم البياني للتدفق النقدي</h4>
           <div className="h-56 flex items-end justify-between gap-2 px-2 border-b border-outline-variant/30">
             {cashFlowData.map((r, i) => {
-              const inH = Math.max((r.inflow / maxVal) * 100, 3);
-              const outH = Math.max((r.outflow / maxVal) * 100, 3);
+              const maxPx = 180;
+              const inPx = Math.max(Math.round((r.inflow / maxVal) * maxPx), 2);
+              const outPx = Math.max(Math.round((r.outflow / maxVal) * maxPx), 2);
               return (
-                <div key={i} className="flex flex-col items-center gap-1 flex-1 min-w-0 group relative">
-                  <div className="flex gap-0.5 w-full items-end justify-center" style={{ height: `${Math.max(inH, outH) + 20}%` }}>
+                <div key={i} className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                  <div className="flex gap-1 w-full justify-center items-end" style={{ height: `${Math.max(inPx, outPx)}px` }}>
                     <div
-                      className="w-3 bg-emerald-400 rounded-t-sm transition-all group-hover:bg-emerald-500"
-                      style={{ height: `${inH}%` }}
+                      className="w-3 bg-emerald-400 rounded-t-sm"
+                      style={{ height: `${inPx}px` }}
                       title={`داخل: ${r.inflow.toLocaleString()}`}
                     ></div>
                     <div
-                      className="w-3 bg-red-400 rounded-t-sm transition-all group-hover:bg-red-500"
-                      style={{ height: `${outH}%` }}
+                      className="w-3 bg-red-400 rounded-t-sm"
+                      style={{ height: `${outPx}px` }}
                       title={`خارج: ${r.outflow.toLocaleString()}`}
                     ></div>
                   </div>
